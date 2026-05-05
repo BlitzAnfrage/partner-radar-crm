@@ -17,6 +17,14 @@ type Props = {
   loadError?: string | null;
 };
 
+const sortLabels: Record<SortMode, string> = {
+  recommended: "Empfohlen",
+  score: "Score",
+  quality: "Qualität",
+  newest: "Neueste",
+  status: "Status"
+};
+
 export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: Props) {
   const [leads, setLeads] = useState(initialLeads);
   const [activeCall, setActiveCall] = useState<Lead | null>(null);
@@ -37,6 +45,16 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
 
   const regions = useMemo(() => uniqueValues(leads, "regionName"), [leads]);
   const categories = useMemo(() => uniqueValues(leads, "category"), [leads]);
+  const activeFilters = [
+    search ? `Suche: ${search}` : "",
+    region ? `Region: ${region}` : "",
+    category ? `Branche: ${category}` : "",
+    quality ? `Qualität: ${quality}` : "",
+    status ? `Status: ${statusLabels[status as LeadStatus] ?? status}` : "",
+    phoneFilter === "present" ? "Mit Telefon" : phoneFilter === "missing" ? "Ohne Telefon" : "",
+    chain ? `Typ: ${chainHintLabels[chain as ChainHint] ?? chain}` : "",
+    sort !== "recommended" ? `Sortierung: ${sortLabels[sort]}` : ""
+  ].filter(Boolean);
 
   const visibleLeads = useMemo(() => {
     const filtered = filterAndSortLeads(leads, {
@@ -81,6 +99,7 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
       updatedAt: new Date().toISOString()
     };
 
+    const previousLead = leads.find((item) => item.id === lead.id);
     setLeads((current) => current.map((item) => (item.id === lead.id ? { ...item, ...nextPatch } : item)));
     if (dataMode === "mock") {
       saveLocalLeadEdit(lead.id, nextPatch);
@@ -98,6 +117,10 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
         setLeads((current) => current.map((item) => (item.id === lead.id ? payload.lead as Lead : item)));
       }
       return true;
+    }
+
+    if (previousLead) {
+      setLeads((current) => current.map((item) => (item.id === lead.id ? previousLead : item)));
     }
 
     return false;
@@ -173,6 +196,15 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
             <option value="status">Status</option>
           </select>
         </div>
+        {activeFilters.length ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {activeFilters.map((filter) => (
+              <span key={filter} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                {filter}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {loadError ? (
@@ -411,11 +443,11 @@ function LeadCard({
               className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
             />
           </div>
-          <input
+          <textarea
             value={callNote}
             onChange={(event) => setCallNote(event.target.value)}
             placeholder="Notiz"
-            className="h-11 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
+            className="h-20 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none focus:border-slate-400"
           />
           <div className="flex items-center justify-end gap-3">
           <button
@@ -449,7 +481,8 @@ function formatNoteTimestamp(date: Date) {
 function getContactSummary(lead: Lead) {
   if (lead.contactCount === 0 && !lead.lastContactResult) return "Noch kein Kontakt";
   if (lead.contactCount === 0) return lead.lastContactResult || "Noch kein Kontakt";
-  return `${lead.contactCount} Kontakte${lead.lastContactResult ? ` · ${lead.lastContactResult}` : ""}`;
+  const count = lead.contactCount === 1 ? "1 Kontakt" : `${lead.contactCount} Kontakte`;
+  return `${count}${lead.lastContactResult ? ` · ${lead.lastContactResult}` : ""}`;
 }
 
 function ContactLine({ icon, value, muted }: { icon: React.ReactNode; value: string; muted?: boolean }) {

@@ -24,7 +24,7 @@ export default function LoginPage({
 
         {missingPassword ? (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900">
-            Missing CRM_ADMIN_PASSWORD server configuration.
+            CRM_ADMIN_PASSWORD fehlt in der Server-Konfiguration.
           </div>
         ) : (
           <form action="/api/auth/login" method="post" className="space-y-4">

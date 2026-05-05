@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, ChevronDown, Play, RotateCcw, Search } from "lucide-react";
+import { Check, ChevronDown, Play, RotateCcw, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { ImportRun } from "@/lib/crm/import-runs";
 import { categoryPresets, categoryRegistry, type CategoryDefinition } from "@/lib/crm/categories";
@@ -165,7 +165,8 @@ export function LeadSearchForm({
             <button
               type="button"
               onClick={() => setCategoriesOpen((current) => !current)}
-              className="flex h-12 w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-left text-sm outline-none transition hover:bg-white"
+              className="flex h-12 w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-left text-sm outline-none transition hover:bg-white focus:border-slate-400 focus:bg-white"
+              aria-expanded={categoriesOpen}
             >
               <span className="min-w-0 truncate font-medium text-slate-800">
                 {selectedCategories.length ? `${selectedCategories.length} Kategorien` : "Kategorien auswählen"}
@@ -175,14 +176,24 @@ export function LeadSearchForm({
             {categoriesOpen ? (
               <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-soft">
                 <div className="border-b border-slate-100 p-3">
-                  <div className="relative">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                      value={categorySearch}
-                      onChange={(event) => setCategorySearch(event.target.value)}
-                      placeholder="Branche suchen"
-                      className="h-10 w-full rounded-2xl bg-slate-50 pl-9 pr-3 text-sm outline-none focus:bg-white"
-                    />
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <input
+                        value={categorySearch}
+                        onChange={(event) => setCategorySearch(event.target.value)}
+                        placeholder="Branche suchen"
+                        className="h-10 w-full rounded-2xl bg-slate-50 pl-9 pr-3 text-sm outline-none focus:bg-white"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCategoriesOpen(false)}
+                      className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-600 transition hover:bg-slate-200"
+                      aria-label="Kategorieauswahl schließen"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
                 <div className="max-h-96 space-y-4 overflow-auto p-3">
@@ -238,6 +249,26 @@ export function LeadSearchForm({
             </button>
           ))}
         </div>
+        {selectedCategories.length ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {selectedCategories.slice(0, 6).map((category) => (
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => toggleCategory(category.id)}
+                className="inline-flex items-center gap-1 rounded-full bg-slate-950 px-3 py-1.5 text-xs font-semibold text-white"
+              >
+                {category.label}
+                <X className="h-3 w-3" />
+              </button>
+            ))}
+            {selectedCategories.length > 6 ? (
+              <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                +{selectedCategories.length - 6}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div>

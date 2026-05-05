@@ -26,15 +26,15 @@ export function DashboardGrid({ leads }: { leads: Lead[] }) {
           <Link
             key={stat.label}
             href={stat.href}
-            className="group rounded-[2rem] border border-white bg-white p-6 shadow-soft transition hover:-translate-y-0.5 hover:border-slate-200"
+            className="group rounded-[1.5rem] border border-slate-100 bg-white p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-slate-200"
           >
-            <div className="mb-8 flex items-center justify-between">
+            <div className="mb-6 flex items-center justify-between">
               <span className="rounded-2xl bg-slate-100 p-3 text-slate-700">
                 <Icon className="h-5 w-5" />
               </span>
               <ArrowUpRight className="h-4 w-4 text-slate-300 transition group-hover:text-slate-950" />
             </div>
-            <div className="text-4xl font-semibold tracking-tight text-slate-950">{stat.value}</div>
+            <div className="text-3xl font-semibold tracking-tight text-slate-950">{stat.value}</div>
             <div className="mt-2 text-sm font-medium text-slate-500">{stat.label}</div>
           </Link>
         );
