@@ -26,13 +26,15 @@ export function LeadSearchForm({
 }) {
   const [region, setRegion] = useState("Saarbrücken");
   const [categories, setCategories] = useState<string[]>(["Bäckerei", "Café", "Restaurant"]);
-  const [quality, setQuality] = useState("A");
-  const [maxLeads, setMaxLeads] = useState(50);
+  const [qualities, setQualities] = useState<string[]>(["A", "B"]);
+  const [maxLeads, setMaxLeads] = useState(30);
+  const [maxSearchJobs, setMaxSearchJobs] = useState(3);
   const [excludeChains, setExcludeChains] = useState(true);
-  const [phoneOnly, setPhoneOnly] = useState(false);
+  const [phoneOnly, setPhoneOnly] = useState(true);
   const [testMode, setTestMode] = useState(true);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const runningImport = importRuns.some((run) => run.status === "RUNNING");
 
   const toggleCategory = (category: string) => {
     setCategories((current) =>
@@ -43,12 +45,19 @@ export function LeadSearchForm({
   const reset = () => {
     setRegion("Saarbrücken");
     setCategories(["Bäckerei", "Café", "Restaurant"]);
-    setQuality("A");
-    setMaxLeads(50);
+    setQualities(["A", "B"]);
+    setMaxLeads(30);
+    setMaxSearchJobs(3);
     setExcludeChains(true);
-    setPhoneOnly(false);
+    setPhoneOnly(true);
     setTestMode(true);
     setMessage("");
+  };
+
+  const toggleQuality = (quality: string) => {
+    setQualities((current) =>
+      current.includes(quality) ? current.filter((item) => item !== quality) : [...current, quality]
+    );
   };
 
   const startSearch = async () => {
@@ -62,8 +71,9 @@ export function LeadSearchForm({
         searchConfig: {
           region,
           categories,
-          quality,
+          qualities,
           maxLeads,
+          maxSearchJobs,
           excludeChains,
           phoneOnly,
           testMode
@@ -108,20 +118,23 @@ export function LeadSearchForm({
             </select>
           </label>
 
-          <label className="block">
+          <div>
             <span className="mb-2 block text-sm font-medium text-slate-500">Qualität</span>
-            <select
-              value={quality}
-              onChange={(event) => setQuality(event.target.value)}
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-slate-400"
-            >
+            <div className="flex h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3">
               {leadSearchQualities.map((item) => (
-                <option key={item.value} value={item.value}>
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => toggleQuality(item.value)}
+                  className={`rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+                    qualities.includes(item.value) ? "bg-slate-950 text-white" : "bg-white text-slate-600"
+                  }`}
+                >
                   {item.label}
-                </option>
+                </button>
               ))}
-            </select>
-          </label>
+            </div>
+          </div>
 
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-500">max. Leads</span>
@@ -131,6 +144,18 @@ export function LeadSearchForm({
               max={500}
               value={maxLeads}
               onChange={(event) => setMaxLeads(Number(event.target.value))}
+              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-slate-400"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-500">max. Suchjobs</span>
+            <input
+              type="number"
+              min={1}
+              max={20}
+              value={maxSearchJobs}
+              onChange={(event) => setMaxSearchJobs(Number(event.target.value))}
               className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-slate-400"
             />
           </label>
@@ -164,11 +189,15 @@ export function LeadSearchForm({
           </div>
         </div>
 
+        <div className="mt-5 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+          Empfohlen für Kaltakquise: A/B Leads, Ketten ausschließen, nur mit Telefonnummer.
+        </div>
+
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
             onClick={startSearch}
-            disabled={!configured || loading || categories.length === 0}
+            disabled={!configured || loading || categories.length === 0 || qualities.length === 0}
             className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Play className="h-4 w-4" />
@@ -194,6 +223,11 @@ export function LeadSearchForm({
             ) : null}
           </div>
         ) : null}
+        {!configured ? (
+          <div className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm font-medium text-amber-900">
+            n8n ist noch nicht vollständig verbunden. URL und Secret müssen vorhanden sein.
+          </div>
+        ) : null}
       </section>
 
       <aside className="space-y-5">
@@ -204,20 +238,30 @@ export function LeadSearchForm({
             <div className="rounded-2xl bg-white/10 p-4">Webhook URL: {webhookUrlPresent ? "vorhanden" : "fehlt"}</div>
             <div className="rounded-2xl bg-white/10 p-4">Webhook Secret: {webhookSecretPresent ? "vorhanden" : "fehlt"}</div>
             <div className="rounded-2xl bg-white/10 p-4">Region: {region}</div>
-            <div className="rounded-2xl bg-white/10 p-4">{categories.length} Kategorien</div>
+            <div className="rounded-2xl bg-white/10 p-4">{categories.length} Kategorien · {qualities.join("/") || "keine Qualität"}</div>
+            <div className="rounded-2xl bg-white/10 p-4">{maxLeads} Leads · {maxSearchJobs} Suchjobs</div>
             <div className="rounded-2xl bg-white/10 p-4">{testMode ? "Testmodus aktiv" : "Live-Suche vorbereitet"}</div>
           </div>
         </section>
 
         <section className="rounded-[2rem] bg-white p-6 shadow-soft">
           <div className="mb-4 text-lg font-semibold tracking-tight text-slate-950">Letzte Importläufe</div>
+          {runningImport ? (
+            <div className="mb-3 rounded-2xl bg-blue-50 p-4 text-sm font-medium text-blue-800">
+              Import läuft oder wartet auf n8n-Antwort.
+            </div>
+          ) : null}
           <div className="space-y-3">
             {importRuns.length ? (
               importRuns.map((run) => (
                 <div key={run.id} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
                   <div className="min-w-0">
                     <div className="truncate text-sm font-semibold text-slate-900">{run.source}</div>
-                    <div className="text-xs text-slate-500">{run.leads_inserted} neu · {run.leads_updated} aktualisiert</div>
+                    <div className="text-xs text-slate-500">
+                      {run.leads_found} gefunden · {run.leads_inserted} neu · {run.leads_updated} aktualisiert
+                    </div>
+                    {run.error_message ? <div className="mt-1 truncate text-xs text-red-600">{run.error_message}</div> : null}
+                    <div className="mt-1 text-xs text-slate-400">{formatDate(run.created_at)}</div>
                   </div>
                   <StatusBadge status={run.status} />
                 </div>
@@ -230,6 +274,15 @@ export function LeadSearchForm({
       </aside>
     </div>
   );
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(value));
 }
 
 function StatusBadge({ status }: { status: ImportRun["status"] }) {

@@ -9,8 +9,10 @@ type TriggerBody = {
   searchConfig?: {
     region?: unknown;
     categories?: unknown;
+    qualities?: unknown;
     quality?: unknown;
     maxLeads?: unknown;
+    maxSearchJobs?: unknown;
     excludeChains?: unknown;
     phoneOnly?: unknown;
     testMode?: unknown;
@@ -105,12 +107,21 @@ function normalizeSearchConfig(searchConfig: TriggerBody["searchConfig"]) {
     ? searchConfig.categories.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
     : [];
   const maxLeads = typeof searchConfig?.maxLeads === "number" ? searchConfig.maxLeads : Number(searchConfig?.maxLeads ?? 50);
+  const maxSearchJobs =
+    typeof searchConfig?.maxSearchJobs === "number" ? searchConfig.maxSearchJobs : Number(searchConfig?.maxSearchJobs ?? 3);
+  const qualities = Array.isArray(searchConfig?.qualities)
+    ? searchConfig.qualities.filter((item): item is string => typeof item === "string" && ["A", "B", "C", "D"].includes(item))
+    : typeof searchConfig?.quality === "string" && ["A", "B", "C", "D"].includes(searchConfig.quality)
+      ? [searchConfig.quality]
+      : ["A", "B"];
 
   return {
     region: typeof searchConfig?.region === "string" && searchConfig.region.trim() ? searchConfig.region.trim() : "Saarbrücken",
     categories,
-    quality: typeof searchConfig?.quality === "string" && searchConfig.quality.trim() ? searchConfig.quality.trim() : "A",
+    qualities,
+    quality: qualities[0] ?? "A",
     maxLeads: Number.isFinite(maxLeads) ? Math.max(1, Math.min(500, Math.round(maxLeads))) : 50,
+    maxSearchJobs: Number.isFinite(maxSearchJobs) ? Math.max(1, Math.min(20, Math.round(maxSearchJobs))) : 3,
     excludeChains: Boolean(searchConfig?.excludeChains),
     phoneOnly: Boolean(searchConfig?.phoneOnly),
     testMode: searchConfig?.testMode !== false

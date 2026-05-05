@@ -1,5 +1,6 @@
 import { DashboardGrid } from "@/components/dashboard/dashboard-grid";
 import { PageHeader } from "@/components/layout/page-header";
+import Link from "next/link";
 import { getDataMode } from "@/lib/crm/config";
 import { toSafeCrmError } from "@/lib/crm/errors";
 import { listImportRuns } from "@/lib/crm/import-runs";
@@ -17,6 +18,9 @@ export default async function HomePage() {
     .catch(() => null);
   const leads = result.leads;
   const dataMode = getDataMode();
+  const callTodayCount = leads.filter(
+    (lead) => lead.status === "NEW" && (lead.leadQuality === "A" || lead.leadQuality === "B") && Boolean(lead.phone)
+  ).length;
 
   return (
     <div>
@@ -36,7 +40,7 @@ export default async function HomePage() {
             {Array.from(new Set(leads.map((lead) => lead.regionName || "Offen")))
               .slice(0, 5)
               .map((region) => {
-                const count = leads.filter((lead) => lead.regionName === region).length;
+                const count = leads.filter((lead) => (lead.regionName || "Offen") === region).length;
                 return (
                   <div key={region} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
                     <span className="font-medium text-slate-800">{region}</span>
@@ -46,6 +50,19 @@ export default async function HomePage() {
               })}
           </div>
         </section>
+        <section className="rounded-[2rem] bg-white p-6 shadow-soft">
+          <div className="text-sm font-medium text-slate-500">Heute anrufen</div>
+          <div className="mt-3 text-4xl font-semibold tracking-tight text-slate-950">{callTodayCount}</div>
+          <div className="mt-2 text-sm text-slate-500">A/B Leads mit Telefonnummer und Status Neu</div>
+          <Link
+            href="/crm?callList=1"
+            className="mt-6 inline-flex h-11 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
+          >
+            Zur Anrufliste
+          </Link>
+        </section>
+      </div>
+      <div className="mt-4 grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
         <section className="rounded-[2rem] bg-white p-6 shadow-soft lg:hidden">
           <div className="text-sm text-slate-500">Datenmodus</div>
           <div className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{dataMode}</div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ExternalLink, Mail, MapPin, Phone, RotateCcw, Search, Sparkles } from "lucide-react";
+import { ExternalLink, ListChecks, Mail, MapPin, Phone, RotateCcw, Search, Sparkles } from "lucide-react";
 import type { ChainHint, Lead, LeadPatch, LeadStatus } from "@/types/crm";
 import { chainHintLabels, leadQualities, leadStatuses, statusLabels } from "@/types/crm";
 import { filterAndSortLeads, type SortMode, uniqueValues } from "@/lib/crm/filtering";
@@ -28,7 +28,8 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
   const [status, setStatus] = useState(String(initialFilters.status ?? ""));
   const [chain, setChain] = useState(String(initialFilters.chain ?? ""));
   const [phoneFilter, setPhoneFilter] = useState(String(initialFilters.phone ?? ""));
-  const [sort, setSort] = useState<SortMode>("score");
+  const [sort, setSort] = useState<SortMode>("recommended");
+  const [callList, setCallList] = useState(initialFilters.callList === "1");
 
   useEffect(() => {
     setLeads(dataMode === "mock" ? mergeLocalLeadEdits(initialLeads) : initialLeads);
@@ -48,10 +49,23 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
       sort
     });
 
-    if (phoneFilter === "present") return filtered.filter((lead) => lead.phone);
-    if (phoneFilter === "missing") return filtered.filter((lead) => !lead.phone);
-    return filtered;
-  }, [leads, search, region, category, quality, status, chain, phoneFilter, sort]);
+    const phoneFiltered =
+      phoneFilter === "present"
+        ? filtered.filter((lead) => lead.phone)
+        : phoneFilter === "missing"
+          ? filtered.filter((lead) => !lead.phone)
+          : filtered;
+
+    if (!callList) return phoneFiltered;
+
+    return phoneFiltered.filter(
+      (lead) =>
+        lead.status === "NEW" &&
+        (lead.leadQuality === "A" || lead.leadQuality === "B") &&
+        Boolean(lead.phone) &&
+        lead.chainHint === "LOCAL"
+    );
+  }, [leads, search, region, category, quality, status, chain, phoneFilter, sort, callList]);
 
   const clearFilters = () => {
     setSearch("");
@@ -61,7 +75,25 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
     setStatus("");
     setChain("");
     setPhoneFilter("");
-    setSort("score");
+    setSort("recommended");
+    setCallList(false);
+  };
+
+  const setFilter = (setter: (value: string) => void, value: string) => {
+    setter(value);
+    setCallList(false);
+  };
+
+  const activateCallList = () => {
+    setSearch("");
+    setRegion("");
+    setCategory("");
+    setQuality("");
+    setStatus("");
+    setChain("");
+    setPhoneFilter("");
+    setSort("recommended");
+    setCallList(true);
   };
 
   const patchLead = async (lead: Lead, patch: LeadPatch) => {
@@ -111,34 +143,66 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
 
   return (
     <>
+      <CrmStats leads={leads} />
+
+      <div className="mb-5 flex flex-col gap-3 rounded-[2rem] bg-white p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="text-sm font-semibold text-slate-950">Schnellfilter</div>
+          <div className="text-sm text-slate-500">Fokus auf direkt anrufbare A/B-Leads.</div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={activateCallList}
+            className={`inline-flex h-10 items-center gap-2 rounded-2xl px-4 text-sm font-semibold transition ${
+              callList ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-800 hover:bg-slate-200"
+            }`}
+          >
+            <ListChecks className="h-4 w-4" />
+            Anrufliste
+          </button>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="inline-flex h-10 items-center rounded-2xl bg-slate-100 px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-200"
+          >
+            Alle Leads
+          </button>
+        </div>
+      </div>
+
       <div className="mb-5 rounded-[2rem] bg-white p-4 shadow-soft">
         <div className="grid gap-3 lg:grid-cols-[1.4fr_repeat(6,minmax(0,1fr))_auto]">
           <label className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setCallList(false);
+              }}
               placeholder="Suche"
               className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none focus:border-slate-400"
             />
           </label>
-          <Select value={region} onChange={setRegion} options={regions} placeholder="Region" />
-          <Select value={category} onChange={setCategory} options={categories} placeholder="Kategorie" />
-          <Select value={quality} onChange={setQuality} options={leadQualities} placeholder="Qualität" />
-          <Select value={status} onChange={setStatus} options={leadStatuses} placeholder="Status" labels={statusLabels} />
+          <Select value={region} onChange={(value) => setFilter(setRegion, value)} options={regions} placeholder="Region" />
+          <Select value={category} onChange={(value) => setFilter(setCategory, value)} options={categories} placeholder="Kategorie" />
+          <Select value={quality} onChange={(value) => setFilter(setQuality, value)} options={leadQualities} placeholder="Qualität" />
+          <Select value={status} onChange={(value) => setFilter(setStatus, value)} options={leadStatuses} placeholder="Status" labels={statusLabels} />
           <Select
             value={chain}
-            onChange={setChain}
+            onChange={(value) => setFilter(setChain, value)}
             options={["LOCAL", "CHAIN", "BRANCH"]}
             placeholder="Typ"
             labels={chainHintLabels}
           />
-          <Select value={phoneFilter} onChange={setPhoneFilter} options={["present", "missing"]} placeholder="Telefon" labels={{ present: "Mit Tel.", missing: "Ohne Tel." }} />
+          <Select value={phoneFilter} onChange={(value) => setFilter(setPhoneFilter, value)} options={["present", "missing"]} placeholder="Telefon" labels={{ present: "Mit Tel.", missing: "Ohne Tel." }} />
           <select
             value={sort}
             onChange={(event) => setSort(event.target.value as SortMode)}
             className="h-11 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
           >
+            <option value="recommended">Empfohlen</option>
             <option value="score">Score</option>
             <option value="quality">Qualität</option>
             <option value="newest">Neueste</option>
@@ -195,6 +259,29 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
       {activeCall ? <CallModal lead={activeCall} onClose={() => setActiveCall(null)} /> : null}
       {activeMail ? <MailModal lead={activeMail} onClose={() => setActiveMail(null)} /> : null}
     </>
+  );
+}
+
+function CrmStats({ leads }: { leads: Lead[] }) {
+  const stats = [
+    { label: "Leads gesamt", value: leads.length },
+    { label: "A-Leads", value: leads.filter((lead) => lead.leadQuality === "A").length },
+    { label: "B-Leads", value: leads.filter((lead) => lead.leadQuality === "B").length },
+    { label: "Mit Telefonnummer", value: leads.filter((lead) => lead.phone).length },
+    { label: "Ohne Telefonnummer", value: leads.filter((lead) => !lead.phone).length },
+    { label: "Ketten", value: leads.filter((lead) => lead.chainHint !== "LOCAL").length },
+    { label: "Neue Leads", value: leads.filter((lead) => lead.status === "NEW").length }
+  ];
+
+  return (
+    <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-7">
+      {stats.map((stat) => (
+        <div key={stat.label} className="rounded-2xl bg-white px-4 py-3 shadow-soft">
+          <div className="text-2xl font-semibold tracking-tight text-slate-950">{stat.value}</div>
+          <div className="mt-1 text-xs font-medium text-slate-500">{stat.label}</div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -286,7 +373,7 @@ function LeadCard({
         <Info label="Status" value={statusLabels[lead.status]} />
       </div>
 
-      <div className="mt-3 line-clamp-2 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+      <div className="mt-3 line-clamp-2 rounded-2xl bg-slate-50 px-4 py-2 text-xs leading-5 text-slate-500">
         {lead.openingHours || "Öffnungszeiten offen"}
       </div>
 
@@ -309,28 +396,29 @@ function LeadCard({
       </div>
 
       <div className="mt-4 grid gap-3">
-        <select
-          value={draftStatus}
-          onChange={(event) => setDraftStatus(event.target.value as LeadStatus)}
-          className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
-        >
-          {leadStatuses.map((item) => (
-            <option key={item} value={item}>
-              {statusLabels[item]}
-            </option>
-          ))}
-        </select>
-        <textarea
+        <div className="grid gap-3 sm:grid-cols-2">
+          <select
+            value={draftStatus}
+            onChange={(event) => setDraftStatus(event.target.value as LeadStatus)}
+            className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
+          >
+            {leadStatuses.map((item) => (
+              <option key={item} value={item}>
+                {statusLabels[item]}
+              </option>
+            ))}
+          </select>
+          <input
+            type="datetime-local"
+            value={appointmentAt}
+            onChange={(event) => setAppointmentAt(event.target.value)}
+            className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
+          />
+        </div>
+        <input
           value={callNote}
           onChange={(event) => setCallNote(event.target.value)}
           placeholder="Notiz"
-          rows={2}
-          className="resize-none rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-slate-400"
-        />
-        <input
-          type="datetime-local"
-          value={appointmentAt}
-          onChange={(event) => setAppointmentAt(event.target.value)}
           className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
         />
         <input
@@ -348,7 +436,7 @@ function LeadCard({
         />
         <div className="flex items-center justify-between gap-3">
           <div className="text-xs font-medium text-slate-400">
-            {lead.contactCount} Kontakte · {lead.lastContactResult}
+            {getContactSummary(lead)}
           </div>
           <button
             onClick={save}
@@ -358,11 +446,19 @@ function LeadCard({
             {saveState === "saving" ? "Speichert..." : "Speichern"}
           </button>
         </div>
-        {saveState === "saved" ? <div className="text-sm font-medium text-emerald-700">Gespeichert.</div> : null}
-        {saveState === "error" ? <div className="text-sm font-medium text-red-700">Speichern fehlgeschlagen.</div> : null}
+        <div className="min-h-5 text-sm font-medium">
+          {saveState === "saved" ? <span className="text-emerald-700">Gespeichert</span> : null}
+          {saveState === "error" ? <span className="text-red-700">Speichern fehlgeschlagen. Bitte erneut versuchen.</span> : null}
+        </div>
       </div>
     </article>
   );
+}
+
+function getContactSummary(lead: Lead) {
+  if (lead.contactCount === 0 && !lead.lastContactResult) return "Noch kein Kontakt";
+  if (lead.contactCount === 0) return lead.lastContactResult || "Noch kein Kontakt";
+  return `${lead.contactCount} Kontakte${lead.lastContactResult ? ` · ${lead.lastContactResult}` : ""}`;
 }
 
 function Info({ label, value }: { label: string; value: string }) {

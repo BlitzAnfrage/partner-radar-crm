@@ -1,6 +1,6 @@
 import type { ChainHint, Lead, LeadQuality, LeadStatus } from "@/types/crm";
 
-export type SortMode = "score" | "quality" | "newest" | "status";
+export type SortMode = "recommended" | "score" | "quality" | "newest" | "status";
 
 export type LeadFilters = {
   search?: string;
@@ -40,7 +40,9 @@ export function filterAndSortLeads(leads: Lead[], filters: LeadFilters) {
       );
     })
     .sort((a, b) => {
-      switch (filters.sort ?? "score") {
+      switch (filters.sort ?? "recommended") {
+        case "recommended":
+          return recommendedCompare(a, b);
         case "quality":
           return (qualityRank[b.leadQuality as LeadQuality] ?? 0) - (qualityRank[a.leadQuality as LeadQuality] ?? 0) || b.score - a.score;
         case "newest":
@@ -52,6 +54,19 @@ export function filterAndSortLeads(leads: Lead[], filters: LeadFilters) {
           return b.score - a.score;
       }
     });
+}
+
+function recommendedCompare(a: Lead, b: Lead) {
+  const qualityDelta = (qualityRank[b.leadQuality as LeadQuality] ?? 0) - (qualityRank[a.leadQuality as LeadQuality] ?? 0);
+  if (qualityDelta) return qualityDelta;
+
+  const phoneDelta = Number(Boolean(b.phone)) - Number(Boolean(a.phone));
+  if (phoneDelta) return phoneDelta;
+
+  const scoreDelta = b.score - a.score;
+  if (scoreDelta) return scoreDelta;
+
+  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 }
 
 export function uniqueValues(leads: Lead[], key: "regionName" | "category") {
