@@ -2,8 +2,22 @@ import { NextResponse } from "next/server";
 import { createImportRun, updateImportRun } from "@/lib/crm/import-runs";
 import { getN8nStatus } from "@/lib/n8n/trigger";
 
-export async function POST() {
+type TriggerBody = {
+  search?: {
+    region?: unknown;
+    categories?: unknown;
+    quality?: unknown;
+    maxLeads?: unknown;
+    excludeChains?: unknown;
+    phoneOnly?: unknown;
+    testMode?: unknown;
+  };
+};
+
+export async function POST(request: Request) {
   const status = getN8nStatus();
+  const body = (await request.json().catch(() => ({}))) as TriggerBody;
+  const search = normalizeSearch(body.search);
 
   if (!status.configured) {
     return NextResponse.json({
@@ -21,7 +35,8 @@ export async function POST() {
       status: "RUNNING",
       metadata: {
         mode: "osm_supabase_import",
-        triggeredBy: "crm"
+        triggeredBy: "crm",
+        search
       }
     });
     importRunId = run.id;
@@ -38,7 +53,8 @@ export async function POST() {
         callbackUrl,
         source: "crm",
         mode: "osm_supabase_import",
-        secretHeaderName: "x-crm-import-secret"
+        secretHeaderName: "x-crm-import-secret",
+        search
       })
     });
 
@@ -70,4 +86,21 @@ export async function POST() {
       { status: 500 }
     );
   }
+}
+
+function normalizeSearch(search: TriggerBody["search"]) {
+  const categories = Array.isArray(search?.categories)
+    ? search.categories.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
+  const maxLeads = typeof search?.maxLeads === "number" ? search.maxLeads : Number(search?.maxLeads ?? 50);
+
+  return {
+    region: typeof search?.region === "string" && search.region.trim() ? search.region.trim() : "Saarbrücken",
+    categories,
+    quality: typeof search?.quality === "string" && search.quality.trim() ? search.quality.trim() : "A",
+    maxLeads: Number.isFinite(maxLeads) ? Math.max(1, Math.min(500, Math.round(maxLeads))) : 50,
+    excludeChains: Boolean(search?.excludeChains),
+    phoneOnly: Boolean(search?.phoneOnly),
+    testMode: search?.testMode !== false
+  };
 }
