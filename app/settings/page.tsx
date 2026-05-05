@@ -17,14 +17,14 @@ export default async function SettingsPage() {
     <div>
       <PageHeader title="Einstellungen" eyebrow="System" />
       <div className="grid gap-4 lg:grid-cols-2">
-        <StatusCard icon={<ServerCog />} label="CRM_DATA_MODE" value={status.dataMode} ok={status.dataMode === "supabase"} />
-        <StatusCard icon={<Database />} label="Database Mode" value={status.dataMode === "supabase" ? "aktiv" : "mock fallback"} ok={status.dataMode === "supabase"} />
-        <StatusCard icon={<Database />} label="Supabase URL present" value={status.supabaseUrlPresent ? "yes" : "no"} ok={status.supabaseUrlPresent} />
-        <StatusCard icon={<KeyRound />} label="Supabase service key present" value={status.supabaseServiceRolePresent ? "yes" : "no"} ok={status.supabaseServiceRolePresent} />
-        <StatusCard icon={<Workflow />} label="n8n URL present" value={status.n8nWebhookUrlPresent ? "yes" : "no"} ok={status.n8nWebhookUrlPresent} />
-        <StatusCard icon={<Workflow />} label="App URL present" value={status.appUrlPresent ? "yes" : "no"} ok={status.appUrlPresent} />
+        <StatusCard icon={<ServerCog />} label="Datenmodus" value={status.dataMode} ok={status.dataMode === "supabase"} />
+        <StatusCard icon={<Database />} label="Datenbankmodus" value={status.dataMode === "supabase" ? "aktiv" : "Mock-Fallback"} ok={status.dataMode === "supabase"} />
+        <StatusCard icon={<Database />} label="Supabase URL" value={status.supabaseUrlPresent ? "vorhanden" : "fehlt"} ok={status.supabaseUrlPresent} />
+        <StatusCard icon={<KeyRound />} label="Supabase Service Key" value={status.supabaseServiceRolePresent ? "vorhanden" : "fehlt"} ok={status.supabaseServiceRolePresent} />
+        <StatusCard icon={<Workflow />} label="n8n Webhook URL" value={status.n8nWebhookUrlPresent ? "vorhanden" : "fehlt"} ok={status.n8nWebhookUrlPresent} />
+        <StatusCard icon={<Workflow />} label="App URL" value={status.appUrlPresent ? "vorhanden" : "fehlt"} ok={status.appUrlPresent} />
         <StatusCard icon={<Lock />} label="Admin Gate" value={status.adminPasswordPrepared ? "vorbereitet" : "leer"} ok={status.adminPasswordPrepared} />
-        <StatusCard icon={<KeyRound />} label="n8n secret present" value={status.n8nWebhookSecretPresent ? "yes" : "no"} ok={status.n8nWebhookSecretPresent} />
+        <StatusCard icon={<KeyRound />} label="n8n Import Secret" value={status.n8nWebhookSecretPresent ? "vorhanden" : "fehlt"} ok={status.n8nWebhookSecretPresent} />
       </div>
 
       <N8nImportCard configured={status.n8nWebhookUrlPresent && status.n8nWebhookSecretPresent && status.appUrlPresent} lastStatus={latestImport?.status ?? "keiner"} />

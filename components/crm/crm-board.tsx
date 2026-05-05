@@ -331,6 +331,7 @@ function LeadCard({
   const [appointmentNote, setAppointmentNote] = useState(lead.appointmentNote);
   const [internalNotes, setInternalNotes] = useState(lead.internalNotes);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     setDraftStatus(lead.status);
@@ -395,49 +396,58 @@ function LeadCard({
         {lead.googleSearchUrl ? <QuickLink href={lead.googleSearchUrl} label="Google" icon={<Search className="h-3.5 w-3.5" />} /> : null}
       </div>
 
-      <div className="mt-4 grid gap-3">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <select
-            value={draftStatus}
-            onChange={(event) => setDraftStatus(event.target.value as LeadStatus)}
-            className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
-          >
-            {leadStatuses.map((item) => (
-              <option key={item} value={item}>
-                {statusLabels[item]}
-              </option>
-            ))}
-          </select>
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+        <div className="text-xs font-medium text-slate-400">{getContactSummary(lead)}</div>
+        <button
+          type="button"
+          onClick={() => setEditing((current) => !current)}
+          className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-200"
+        >
+          Bearbeiten / Notiz
+        </button>
+      </div>
+
+      {editing ? (
+        <div className="mt-4 grid gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <select
+              value={draftStatus}
+              onChange={(event) => setDraftStatus(event.target.value as LeadStatus)}
+              className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
+            >
+              {leadStatuses.map((item) => (
+                <option key={item} value={item}>
+                  {statusLabels[item]}
+                </option>
+              ))}
+            </select>
+            <input
+              type="datetime-local"
+              value={appointmentAt}
+              onChange={(event) => setAppointmentAt(event.target.value)}
+              className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
+            />
+          </div>
           <input
-            type="datetime-local"
-            value={appointmentAt}
-            onChange={(event) => setAppointmentAt(event.target.value)}
+            value={callNote}
+            onChange={(event) => setCallNote(event.target.value)}
+            placeholder="Notiz"
             className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
           />
-        </div>
-        <input
-          value={callNote}
-          onChange={(event) => setCallNote(event.target.value)}
-          placeholder="Notiz"
-          className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
-        />
-        <input
-          value={appointmentNote}
-          onChange={(event) => setAppointmentNote(event.target.value)}
-          placeholder="Terminnotiz"
-          className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
-        />
-        <textarea
-          value={internalNotes}
-          onChange={(event) => setInternalNotes(event.target.value)}
-          placeholder="Interne Notizen"
-          rows={2}
-          className="resize-none rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-slate-400"
-        />
-        <div className="flex items-center justify-between gap-3">
-          <div className="text-xs font-medium text-slate-400">
-            {getContactSummary(lead)}
-          </div>
+          <input
+            value={appointmentNote}
+            onChange={(event) => setAppointmentNote(event.target.value)}
+            placeholder="Terminnotiz"
+            className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400"
+          />
+          <textarea
+            value={internalNotes}
+            onChange={(event) => setInternalNotes(event.target.value)}
+            placeholder="Interne Notizen"
+            rows={2}
+            className="resize-none rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-slate-400"
+          />
+          <div className="flex items-center justify-end gap-3">
           <button
             onClick={save}
             disabled={saveState === "saving"}
@@ -450,7 +460,8 @@ function LeadCard({
           {saveState === "saved" ? <span className="text-emerald-700">Gespeichert</span> : null}
           {saveState === "error" ? <span className="text-red-700">Speichern fehlgeschlagen. Bitte erneut versuchen.</span> : null}
         </div>
-      </div>
+        </div>
+      ) : null}
     </article>
   );
 }

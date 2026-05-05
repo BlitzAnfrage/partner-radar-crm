@@ -19,7 +19,11 @@ export default async function HomePage() {
   const leads = result.leads;
   const dataMode = getDataMode();
   const callTodayCount = leads.filter(
-    (lead) => lead.status === "NEW" && (lead.leadQuality === "A" || lead.leadQuality === "B") && Boolean(lead.phone)
+    (lead) =>
+      lead.status === "NEW" &&
+      (lead.leadQuality === "A" || lead.leadQuality === "B") &&
+      Boolean(lead.phone) &&
+      lead.chainHint === "LOCAL"
   ).length;
 
   return (

@@ -99,8 +99,11 @@ export function LeadSearchForm({
   return (
     <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
       <section className="rounded-[2rem] bg-white p-6 shadow-soft">
-        <div className="mb-6 max-w-2xl text-sm leading-6 text-slate-500">
-          Starte eine kontrollierte n8n-Suche. Im Testmodus kann der Workflow später begrenzt laufen.
+        <div className="mb-6">
+          <div className="text-xl font-semibold tracking-tight text-slate-950">Starte eine kontrollierte Lead-Suche über n8n.</div>
+          <div className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+            Empfohlen: A/B Leads, nur mit Telefonnummer, Ketten ausschließen.
+          </div>
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
           <label className="block">
@@ -190,7 +193,8 @@ export function LeadSearchForm({
         </div>
 
         <div className="mt-5 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-          Empfohlen für Kaltakquise: A/B Leads, Ketten ausschließen, nur mit Telefonnummer.
+          Aktiv: {qualities.join("/")} Leads · {phoneOnly ? "nur mit Telefonnummer" : "Telefon optional"} ·{" "}
+          {excludeChains ? "keine Ketten" : "Ketten erlaubt"} · max. {maxLeads} Leads · {maxSearchJobs} Suchjobs
         </div>
 
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -261,7 +265,10 @@ export function LeadSearchForm({
                       {run.leads_found} gefunden · {run.leads_inserted} neu · {run.leads_updated} aktualisiert
                     </div>
                     {run.error_message ? <div className="mt-1 truncate text-xs text-red-600">{run.error_message}</div> : null}
-                    <div className="mt-1 text-xs text-slate-400">{formatDate(run.created_at)}</div>
+                    <div className="mt-1 text-xs text-slate-400">
+                      {formatDate(run.created_at)}
+                      {isStaleRunning(run) ? " · Wahrscheinlich hängen geblieben" : ""}
+                    </div>
                   </div>
                   <StatusBadge status={run.status} />
                 </div>
@@ -283,6 +290,10 @@ function formatDate(value: string) {
     hour: "2-digit",
     minute: "2-digit"
   }).format(new Date(value));
+}
+
+function isStaleRunning(run: ImportRun) {
+  return run.status === "RUNNING" && Date.now() - new Date(run.created_at).getTime() > 15 * 60 * 1000;
 }
 
 function StatusBadge({ status }: { status: ImportRun["status"] }) {
