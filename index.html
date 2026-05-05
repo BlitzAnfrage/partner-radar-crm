@@ -2,21 +2,25 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Partner Radar CRM</title>
+
   <style>
     :root {
-      --bg: #0f172a;
-      --panel: #111827;
+      --bg: #f3f6fb;
+      --dark: #0f172a;
+      --dark2: #1e293b;
       --card: #ffffff;
-      --muted: #64748b;
       --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
       --green: #16a34a;
       --blue: #2563eb;
       --orange: #f97316;
       --red: #dc2626;
-      --border: #e5e7eb;
+      --yellow: #f59e0b;
       --soft: #f8fafc;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
     }
 
     * {
@@ -25,90 +29,120 @@
 
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f1f5f9;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
       color: var(--text);
     }
 
     header {
       background: linear-gradient(135deg, #0f172a, #1e293b);
       color: white;
-      padding: 22px 16px;
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.2);
+      padding: 28px 16px;
+      box-shadow: 0 8px 30px rgba(15, 23, 42, 0.25);
     }
 
-    .header-inner {
+    .wrap {
       max-width: 1180px;
       margin: 0 auto;
     }
 
     h1 {
       margin: 0;
-      font-size: 24px;
-      letter-spacing: -0.03em;
+      font-size: 28px;
+      letter-spacing: -0.04em;
     }
 
     .subtitle {
+      margin-top: 6px;
       color: #cbd5e1;
-      margin-top: 5px;
       font-size: 14px;
     }
 
     main {
       max-width: 1180px;
       margin: 0 auto;
-      padding: 18px 14px 80px;
+      padding: 20px 14px 90px;
     }
 
-    .setup {
+    .panel {
       background: white;
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 18px;
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: var(--shadow);
       margin-bottom: 16px;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
     }
 
-    .setup h2 {
-      margin-top: 0;
+    .setup-title {
       font-size: 18px;
+      font-weight: 850;
+      margin-bottom: 6px;
+    }
+
+    .help {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 12px;
     }
 
     .setup-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr auto;
+      grid-template-columns: 2fr 1fr auto;
       gap: 10px;
     }
 
-    input, select, textarea {
+    input,
+    select {
       width: 100%;
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 11px 12px;
+      border-radius: 14px;
+      padding: 12px 13px;
       font-size: 14px;
       background: white;
+      outline: none;
     }
 
-    button, .button {
+    input:focus,
+    select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    button,
+    .btn {
       border: 0;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 11px 13px;
+      font-weight: 800;
       font-size: 14px;
-      font-weight: 700;
       cursor: pointer;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 7px;
       white-space: nowrap;
+      transition: transform 0.08s ease, opacity 0.15s ease;
+    }
+
+    button:hover,
+    .btn:hover {
+      opacity: 0.92;
+    }
+
+    button:active,
+    .btn:active {
+      transform: scale(0.98);
     }
 
     .btn-primary {
       background: var(--blue);
+      color: white;
+    }
+
+    .btn-dark {
+      background: var(--dark);
       color: white;
     }
 
@@ -132,23 +166,14 @@
       color: #0f172a;
     }
 
-    .btn-dark {
-      background: #0f172a;
-      color: white;
-    }
-
-    .toolbar {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 14px;
-      margin-bottom: 16px;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    .btn-yellow {
+      background: #fef3c7;
+      color: #92400e;
     }
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 10px;
       margin-bottom: 12px;
     }
@@ -156,18 +181,20 @@
     .stat {
       background: var(--soft);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px;
+      border-radius: 18px;
+      padding: 13px;
     }
 
     .stat strong {
-      font-size: 22px;
       display: block;
+      font-size: 24px;
+      letter-spacing: -0.04em;
     }
 
     .stat span {
       color: var(--muted);
       font-size: 12px;
+      font-weight: 700;
     }
 
     .filters {
@@ -183,13 +210,8 @@
       margin-top: 12px;
     }
 
-    .tab {
-      background: #e2e8f0;
-      color: #0f172a;
-    }
-
     .tab.active {
-      background: #0f172a;
+      background: var(--dark);
       color: white;
     }
 
@@ -202,9 +224,9 @@
     .card {
       background: white;
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 16px;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.07);
+      border-radius: 24px;
+      padding: 17px;
+      box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -214,35 +236,59 @@
       border: 2px solid rgba(22, 163, 74, 0.45);
     }
 
-    .card-header {
+    .card-head {
       display: flex;
       justify-content: space-between;
       gap: 12px;
     }
 
     .name {
-      font-size: 19px;
-      font-weight: 800;
-      margin-bottom: 4px;
-      letter-spacing: -0.02em;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.035em;
+      line-height: 1.15;
     }
 
     .meta {
       color: var(--muted);
       font-size: 13px;
-      line-height: 1.4;
+      line-height: 1.45;
+      margin-top: 5px;
+    }
+
+    .score-box {
+      text-align: right;
+      min-width: 62px;
+    }
+
+    .score {
+      font-size: 26px;
+      font-weight: 950;
+      letter-spacing: -0.05em;
+    }
+
+    .score-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
     .badge {
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
-      padding: 5px 9px;
+      padding: 6px 9px;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 850;
       background: #e2e8f0;
       color: #0f172a;
-      white-space: nowrap;
     }
 
     .badge-a {
@@ -265,48 +311,43 @@
       color: #991b1b;
     }
 
-    .score {
-      text-align: right;
-      font-weight: 900;
-      font-size: 22px;
-    }
-
-    .score-label {
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 600;
-    }
-
     .info-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      font-size: 13px;
     }
 
     .info {
       background: var(--soft);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 10px;
+      font-size: 13px;
       overflow-wrap: anywhere;
     }
 
     .label {
       color: var(--muted);
-      font-size: 11px;
-      font-weight: 800;
+      font-size: 10px;
+      font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 3px;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
     }
 
     .offer {
       background: #ecfdf5;
       border: 1px solid #bbf7d0;
-      border-radius: 14px;
-      padding: 11px;
+      border-radius: 16px;
+      padding: 12px;
       font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .reason {
+      color: #475569;
+      font-size: 12px;
+      line-height: 1.45;
     }
 
     .actions {
@@ -321,35 +362,40 @@
       gap: 8px;
     }
 
-    .small {
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.4;
-    }
-
-    .empty {
+    .empty,
+    .loading,
+    .error {
       background: white;
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 30px;
+      border-radius: 22px;
+      padding: 28px;
       text-align: center;
       color: var(--muted);
+      box-shadow: var(--shadow);
     }
 
-    .loading {
-      padding: 18px;
-      color: var(--muted);
-      text-align: center;
+    .error {
+      color: #991b1b;
+      background: #fef2f2;
+      border-color: #fecaca;
+      text-align: left;
+      line-height: 1.55;
     }
 
     .hidden {
       display: none !important;
     }
 
-    @media (max-width: 850px) {
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 900px) {
       .setup-grid,
-      .filters,
       .stats,
+      .filters,
       .list,
       .info-grid,
       .actions,
@@ -357,40 +403,45 @@
         grid-template-columns: 1fr;
       }
 
-      header {
-        position: static;
-      }
-
-      .card-header {
+      .card-head {
         flex-direction: column;
       }
 
-      .score {
+      .score-box {
         text-align: left;
       }
     }
   </style>
 </head>
+
 <body>
   <header>
-    <div class="header-inner">
+    <div class="wrap">
       <h1>Partner Radar CRM</h1>
-      <div class="subtitle">Deine besten Leads aus Google Sheets – schnell prüfen, anrufen, Status setzen.</div>
+      <div class="subtitle">Leads aus Google Sheets über n8n – schön anzeigen, schnell anrufen, Status merken.</div>
     </div>
   </header>
 
   <main>
-    <section id="setupBox" class="setup">
-      <h2>Einmalige Einrichtung</h2>
-      <p class="small">Trage hier deine Apps-Script-Web-App-URL und deinen Admin-Token ein. Beides wird nur in deinem Browser gespeichert.</p>
+    <section id="setupBox" class="panel">
+      <div class="setup-title">Einrichtung</div>
+      <div class="help">
+        Trage deine n8n Webhook-URL und deinen geheimen Token ein.
+        Beides wird nur in deinem Browser gespeichert, nicht in GitHub.
+      </div>
+
       <div class="setup-grid">
-        <input id="apiUrlInput" placeholder="Apps Script Web-App URL, endet mit /exec" />
-        <input id="tokenInput" placeholder="Admin Token" type="password" />
+        <input id="apiUrlInput" placeholder="n8n Webhook URL" />
+        <input id="tokenInput" placeholder="Token" type="password" />
         <button class="btn-primary" onclick="saveSettings()">Speichern & laden</button>
+      </div>
+
+      <div class="small" style="margin-top:10px;">
+        Beispiel URL: https://n8n.srv899952.hstgr.cloud/webhook/partner-radar-crm
       </div>
     </section>
 
-    <section class="toolbar">
+    <section class="panel">
       <div class="stats">
         <div class="stat">
           <strong id="statTotal">0</strong>
@@ -403,6 +454,10 @@
         <div class="stat">
           <strong id="statA">0</strong>
           <span>A-Leads</span>
+        </div>
+        <div class="stat">
+          <strong id="statWebsite">0</strong>
+          <span>Website prüfen</span>
         </div>
         <div class="stat">
           <strong id="statLocal">0</strong>
@@ -430,29 +485,38 @@
       </div>
 
       <div class="tabs">
-        <button id="tab-call" class="button tab active" onclick="setView('call')">Heute anrufen</button>
-        <button id="tab-website" class="button tab" onclick="setView('website')">Website prüfen</button>
-        <button id="tab-a" class="button tab" onclick="setView('a')">Nur A-Leads</button>
-        <button id="tab-all" class="button tab" onclick="setView('all')">Alle</button>
-        <button class="button btn-light" onclick="loadLeads()">Neu laden</button>
-        <button class="button btn-light" onclick="resetSettings()">Einstellungen löschen</button>
+        <button id="tab-call" class="tab active" onclick="setView('call')">Heute anrufen</button>
+        <button id="tab-website" class="tab btn-light" onclick="setView('website')">Website prüfen</button>
+        <button id="tab-a" class="tab btn-light" onclick="setView('a')">Nur A-Leads</button>
+        <button id="tab-local" class="tab btn-light" onclick="setView('local')">Nur lokale</button>
+        <button id="tab-all" class="tab btn-light" onclick="setView('all')">Alle</button>
+        <button class="btn-light" onclick="loadLeads()">Neu laden</button>
+        <button class="btn-light" onclick="resetSettings()">Einstellungen löschen</button>
       </div>
     </section>
 
-    <div id="loading" class="loading hidden">Lade Leads...</div>
+    <div id="loadingBox" class="loading hidden">Lade Leads...</div>
+    <div id="errorBox" class="error hidden"></div>
     <section id="leadList" class="list"></section>
     <div id="emptyBox" class="empty hidden">Keine Leads für diesen Filter gefunden.</div>
   </main>
 
   <script>
-    let API_URL = localStorage.getItem('partnerRadarApiUrl') || '';
+    const DEFAULT_API_URL = 'https://n8n.srv899952.hstgr.cloud/webhook/partner-radar-crm';
+
+    let API_URL = localStorage.getItem('partnerRadarApiUrl') || DEFAULT_API_URL;
     let TOKEN = localStorage.getItem('partnerRadarToken') || '';
     let leads = [];
     let view = 'call';
 
+    const localStatuses = JSON.parse(localStorage.getItem('partnerRadarLocalStatuses') || '{}');
+
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('apiUrlInput').value = API_URL;
       document.getElementById('tokenInput').value = TOKEN;
+
+      fillSelect('regionFilter', 'Alle Regionen', []);
+      fillSelect('categoryFilter', 'Alle Kategorien', []);
 
       if (API_URL && TOKEN) {
         document.getElementById('setupBox').classList.add('hidden');
@@ -465,12 +529,13 @@
       TOKEN = document.getElementById('tokenInput').value.trim();
 
       if (!API_URL || !TOKEN) {
-        alert('Bitte Apps Script URL und Token eintragen.');
+        alert('Bitte n8n Webhook URL und Token eintragen.');
         return;
       }
 
       localStorage.setItem('partnerRadarApiUrl', API_URL);
       localStorage.setItem('partnerRadarToken', TOKEN);
+
       document.getElementById('setupBox').classList.add('hidden');
       loadLeads();
     }
@@ -481,91 +546,151 @@
       location.reload();
     }
 
-    function jsonp(params) {
-      return new Promise((resolve, reject) => {
-        if (!API_URL || !TOKEN) {
-          reject(new Error('API URL oder Token fehlt.'));
-          return;
+    async function callApi(params = {}) {
+      if (!API_URL || !TOKEN) {
+        throw new Error('API URL oder Token fehlt.');
+      }
+
+      const url = new URL(API_URL);
+
+      Object.entries({
+        ...params,
+        token: TOKEN
+      }).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          url.searchParams.set(key, value);
         }
-
-        const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
-        const url = new URL(API_URL);
-
-        Object.entries({ ...params, token: TOKEN, callback: callbackName }).forEach(([key, value]) => {
-          url.searchParams.set(key, value ?? '');
-        });
-
-        const script = document.createElement('script');
-
-        window[callbackName] = (data) => {
-          delete window[callbackName];
-          script.remove();
-          resolve(data);
-        };
-
-        script.onerror = () => {
-          delete window[callbackName];
-          script.remove();
-          reject(new Error('API konnte nicht geladen werden.'));
-        };
-
-        script.src = url.toString();
-        document.body.appendChild(script);
       });
-    }
 
-    async function loadLeads() {
+      const response = await fetch(url.toString(), {
+        method: 'GET'
+      });
+
+      if (!response.ok) {
+        throw new Error('API Fehler: HTTP ' + response.status);
+      }
+
+      const text = await response.text();
+
       try {
-        document.getElementById('loading').classList.remove('hidden');
-        document.getElementById('leadList').innerHTML = '';
-        document.getElementById('emptyBox').classList.add('hidden');
-
-        const data = await jsonp({ action: 'list', limit: 3000 });
-
-        if (!data.ok) {
-          alert(data.error || 'Fehler beim Laden.');
-          return;
-        }
-
-        leads = data.leads || [];
-        buildFilters();
-        render();
-
-      } catch (err) {
-        alert(err.message || String(err));
-      } finally {
-        document.getElementById('loading').classList.add('hidden');
+        return JSON.parse(text);
+      } catch (e) {
+        throw new Error('API hat kein gültiges JSON geliefert. Antwort war: ' + text.slice(0, 200));
       }
     }
 
-    function buildFilters() {
-      const regions = unique(leads.map(l => l.region_name).filter(Boolean));
-      const categories = unique(leads.map(l => l.category).filter(Boolean));
+    function normalizeApiResponse(data) {
+      if (Array.isArray(data)) {
+        if (data[0] && data[0].json) return data[0].json;
+        if (data[0]) return data[0];
+      }
 
-      fillSelect('regionFilter', 'Alle Regionen', regions);
-      fillSelect('categoryFilter', 'Alle Kategorien', categories);
+      if (data && data.json) return data.json;
+      return data;
     }
 
-    function fillSelect(id, firstLabel, values) {
+    async function loadLeads() {
+      hideError();
+      document.getElementById('loadingBox').classList.remove('hidden');
+      document.getElementById('leadList').innerHTML = '';
+      document.getElementById('emptyBox').classList.add('hidden');
+
+      try {
+        const raw = await callApi({
+          action: 'list',
+          limit: 3000
+        });
+
+        const data = normalizeApiResponse(raw);
+
+        if (!data || data.ok === false) {
+          throw new Error(data?.error || 'Unbekannter API Fehler.');
+        }
+
+        if (!Array.isArray(data.leads)) {
+          throw new Error('API liefert keine leads-Liste. Prüfe Node "05 CRM Daten bauen".');
+        }
+
+        leads = data.leads.map(normalizeLead);
+        buildFilters();
+        render();
+
+      } catch (error) {
+        showError(error.message || String(error));
+      } finally {
+        document.getElementById('loadingBox').classList.add('hidden');
+      }
+    }
+
+    function normalizeLead(lead) {
+      const placeId = stringValue(lead.place_id);
+
+      return {
+        place_id: placeId,
+        name: stringValue(lead.name),
+        category: stringValue(lead.category),
+        category_group: stringValue(lead.category_group),
+        region_name: stringValue(lead.region_name),
+        address: stringValue(lead.address),
+        phone: cleanPhone(stringValue(lead.phone)),
+        website: stringValue(lead.website),
+        maps_url: stringValue(lead.maps_url),
+        score: numberValue(lead.score),
+        offer_idea: stringValue(lead.offer_idea),
+        status: localStatuses[placeId] || stringValue(lead.status || 'NEU'),
+        next_action: stringValue(lead.next_action),
+        email: stringValue(lead.email),
+        opening_hours: stringValue(lead.opening_hours),
+        google_search_url: stringValue(lead.google_search_url),
+        phone_search_url: stringValue(lead.phone_search_url),
+        lead_quality: stringValue(lead.lead_quality),
+        chain_hint: stringValue(lead.chain_hint),
+        score_reason: stringValue(lead.score_reason)
+      };
+    }
+
+    function stringValue(value) {
+      return String(value ?? '').trim();
+    }
+
+    function numberValue(value) {
+      const n = Number(String(value ?? '0').replace(',', '.'));
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function cleanPhone(phone) {
+      return String(phone || '').replace(/^'/, '').trim();
+    }
+
+    function buildFilters() {
+      fillSelect('regionFilter', 'Alle Regionen', unique(leads.map(l => l.region_name).filter(Boolean)));
+      fillSelect('categoryFilter', 'Alle Kategorien', unique(leads.map(l => l.category).filter(Boolean)));
+    }
+
+    function fillSelect(id, label, values) {
       const select = document.getElementById(id);
       const current = select.value;
 
-      select.innerHTML = `<option value="">${firstLabel}</option>` + values
-        .map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)
-        .join('');
+      select.innerHTML =
+        `<option value="">${escapeHtml(label)}</option>` +
+        values.map(v => `<option value="${escapeAttr(v)}">${escapeHtml(v)}</option>`).join('');
 
-      select.value = current;
+      if ([...select.options].some(o => o.value === current)) {
+        select.value = current;
+      }
     }
 
-    function unique(arr) {
-      return [...new Set(arr)].sort((a, b) => String(a).localeCompare(String(b)));
+    function unique(values) {
+      return [...new Set(values)].sort((a, b) => a.localeCompare(b));
     }
 
     function setView(nextView) {
       view = nextView;
 
-      ['call', 'website', 'a', 'all'].forEach(v => {
-        document.getElementById('tab-' + v).classList.toggle('active', v === view);
+      ['call', 'website', 'a', 'local', 'all'].forEach(v => {
+        const el = document.getElementById('tab-' + v);
+        if (!el) return;
+        el.classList.toggle('active', v === view);
       });
 
       render();
@@ -576,37 +701,65 @@
       const region = document.getElementById('regionFilter').value;
       const category = document.getElementById('categoryFilter').value;
       const status = document.getElementById('statusFilter').value;
-      const chain = document.getElementById('chainFilter').value;
+      const chainFilter = document.getElementById('chainFilter').value;
 
-      return leads.filter(lead => {
-        if (region && lead.region_name !== region) return false;
-        if (category && lead.category !== category) return false;
-        if (status && lead.status !== status) return false;
+      return leads
+        .filter(lead => {
+          if (!lead.place_id || !lead.name) return false;
 
-        if (chain === 'local' && lead.chain_hint === 'KETTE / FILIALE') return false;
-        if (chain === 'chain' && lead.chain_hint !== 'KETTE / FILIALE') return false;
+          if (region && lead.region_name !== region) return false;
+          if (category && lead.category !== category) return false;
+          if (status && lead.status !== status) return false;
 
-        if (view === 'call' && lead.next_action !== 'HEUTE ANRUFEN') return false;
-        if (view === 'website' && !String(lead.next_action || '').includes('WEBSITE')) return false;
-        if (view === 'a' && !String(lead.lead_quality || '').startsWith('A')) return false;
+          const isChain = lead.chain_hint === 'KETTE / FILIALE';
 
-        if (search) {
-          const haystack = [
-            lead.name,
-            lead.address,
-            lead.category,
-            lead.region_name,
-            lead.phone,
-            lead.website,
-            lead.lead_quality,
-            lead.next_action
-          ].join(' ').toLowerCase();
+          if (chainFilter === 'local' && isChain) return false;
+          if (chainFilter === 'chain' && !isChain) return false;
 
-          if (!haystack.includes(search)) return false;
-        }
+          if (view === 'call' && lead.next_action !== 'HEUTE ANRUFEN') return false;
+          if (view === 'website' && !lead.next_action.includes('WEBSITE')) return false;
+          if (view === 'a' && !lead.lead_quality.startsWith('A')) return false;
+          if (view === 'local' && isChain) return false;
 
-        return true;
-      });
+          if (search) {
+            const haystack = [
+              lead.name,
+              lead.category,
+              lead.category_group,
+              lead.region_name,
+              lead.address,
+              lead.phone,
+              lead.website,
+              lead.email,
+              lead.next_action,
+              lead.lead_quality,
+              lead.chain_hint
+            ].join(' ').toLowerCase();
+
+            if (!haystack.includes(search)) return false;
+          }
+
+          return true;
+        })
+        .sort((a, b) => {
+          const statusPriority = statusRank(a.status) - statusRank(b.status);
+          if (statusPriority !== 0) return statusPriority;
+
+          const scoreDiff = b.score - a.score;
+          if (scoreDiff !== 0) return scoreDiff;
+
+          return a.name.localeCompare(b.name);
+        });
+    }
+
+    function statusRank(status) {
+      const s = String(status || 'NEU');
+      if (s === 'NEU') return 1;
+      if (s === 'INTERESSE') return 2;
+      if (s === 'ANGERUFEN') return 3;
+      if (s === 'PARTNER') return 4;
+      if (s === 'ABSAGE') return 9;
+      return 5;
     }
 
     function render() {
@@ -614,13 +767,14 @@
 
       document.getElementById('statTotal').textContent = leads.length;
       document.getElementById('statCall').textContent = leads.filter(l => l.next_action === 'HEUTE ANRUFEN').length;
-      document.getElementById('statA').textContent = leads.filter(l => String(l.lead_quality || '').startsWith('A')).length;
+      document.getElementById('statA').textContent = leads.filter(l => l.lead_quality.startsWith('A')).length;
+      document.getElementById('statWebsite').textContent = leads.filter(l => l.next_action.includes('WEBSITE')).length;
       document.getElementById('statLocal').textContent = leads.filter(l => l.chain_hint !== 'KETTE / FILIALE').length;
 
       const list = document.getElementById('leadList');
       const empty = document.getElementById('emptyBox');
 
-      if (filtered.length === 0) {
+      if (!filtered.length) {
         list.innerHTML = '';
         empty.classList.remove('hidden');
         return;
@@ -631,66 +785,94 @@
     }
 
     function renderCard(lead) {
-      const phoneClean = cleanPhone(lead.phone);
-      const telHref = phoneClean ? `tel:${phoneClean.replace(/[^0-9+]/g, '')}` : '';
+      const phone = cleanPhone(lead.phone);
+      const telHref = phone ? 'tel:' + phone.replace(/[^0-9+]/g, '') : '';
       const qualityClass = getQualityClass(lead.lead_quality);
-      const isTop = String(lead.lead_quality || '').startsWith('A');
+      const topClass = lead.lead_quality.startsWith('A') ? 'top' : '';
+      const websiteUrl = normalizeUrl(lead.website);
+      const googleUrl = lead.google_search_url || buildGoogleUrl(lead.name, lead.region_name, 'Telefonnummer');
+      const phoneSearchUrl = lead.phone_search_url || buildGoogleUrl(lead.name, lead.address || lead.region_name, 'Kontakt Telefon');
 
       return `
-        <article class="card ${isTop ? 'top' : ''}">
-          <div class="card-header">
+        <article class="card ${topClass}">
+          <div class="card-head">
             <div>
               <div class="name">${escapeHtml(lead.name)}</div>
               <div class="meta">
-                ${escapeHtml(lead.category || '')} · ${escapeHtml(lead.region_name || '')}<br>
-                ${escapeHtml(lead.address || 'Keine Adresse vorhanden')}
+                ${escapeHtml(lead.category || 'Keine Kategorie')} · ${escapeHtml(lead.region_name || 'Keine Region')}<br>
+                ${escapeHtml(lead.address || 'Keine Adresse')}
               </div>
             </div>
-            <div>
-              <div class="score">${lead.score || 0}</div>
+
+            <div class="score-box">
+              <div class="score">${escapeHtml(String(lead.score || 0))}</div>
               <div class="score-label">Score</div>
             </div>
           </div>
 
-          <div>
+          <div class="badges">
             <span class="badge ${qualityClass}">${escapeHtml(lead.lead_quality || 'Keine Qualität')}</span>
             <span class="badge">${escapeHtml(lead.status || 'NEU')}</span>
-            <span class="badge">${escapeHtml(lead.chain_hint || '')}</span>
+            <span class="badge">${escapeHtml(lead.next_action || 'Keine Aktion')}</span>
+            <span class="badge">${escapeHtml(lead.chain_hint || 'Unklar')}</span>
           </div>
 
           <div class="info-grid">
             <div class="info">
               <div class="label">Telefon</div>
-              ${phoneClean ? escapeHtml(phoneClean) : '—'}
+              ${phone ? escapeHtml(phone) : '—'}
             </div>
-            <div class="info">
-              <div class="label">Nächste Aktion</div>
-              ${escapeHtml(lead.next_action || '—')}
-            </div>
+
             <div class="info">
               <div class="label">Website</div>
-              ${lead.website ? `<a href="${escapeAttr(lead.website)}" target="_blank">öffnen</a>` : '—'}
+              ${websiteUrl ? `<a href="${escapeAttr(websiteUrl)}" target="_blank" rel="noopener">Website öffnen</a>` : '—'}
             </div>
+
             <div class="info">
               <div class="label">E-Mail</div>
               ${lead.email ? `<a href="mailto:${escapeAttr(lead.email)}">${escapeHtml(lead.email)}</a>` : '—'}
+            </div>
+
+            <div class="info">
+              <div class="label">Öffnungszeiten</div>
+              ${escapeHtml(lead.opening_hours || 'Keine Angabe')}
             </div>
           </div>
 
           <div class="offer">
             <div class="label">Angebotsidee</div>
-            ${escapeHtml(lead.offer_idea || 'Einfacher Mitarbeiterrabatt')}
+            ${escapeHtml(lead.offer_idea || 'Einfacher Mitarbeiterrabatt oder exklusives Vorteil-Angebot')}
           </div>
 
-          <div class="small">
-            <strong>Öffnungszeiten:</strong> ${escapeHtml(lead.opening_hours || 'Keine Angabe')}<br>
-            <strong>Grund:</strong> ${escapeHtml(lead.score_reason || '')}
+          <div class="reason">
+            <strong>Warum dieser Score:</strong> ${escapeHtml(lead.score_reason || 'Keine Begründung')}
           </div>
 
           <div class="actions">
-            ${phoneClean ? `<a class="button btn-green" href="${telHref}">Anrufen</a>` : `<button class="button btn-light" disabled>Kein Telefon</button>`}
-            ${lead.website ? `<a class="button btn-primary" href="${escapeAttr(lead.website)}" target="_blank">Website</a>` : `<a class="button btn-primary" href="${escapeAttr(lead.phone_search_url || lead.google_search_url)}" target="_blank">Telefon suchen</a>`}
-            <a class="button btn-light" href="${escapeAttr(lead.google_search_url || '#')}" target="_blank">Google</a>
+            ${
+              phone
+                ? `<a class="btn btn-green" href="${escapeAttr(telHref)}">📞 Anrufen</a>`
+                : `<a class="btn btn-yellow" href="${escapeAttr(phoneSearchUrl)}" target="_blank" rel="noopener">Telefon suchen</a>`
+            }
+
+            ${
+              websiteUrl
+                ? `<a class="btn btn-primary" href="${escapeAttr(websiteUrl)}" target="_blank" rel="noopener">Website</a>`
+                : `<a class="btn btn-primary" href="${escapeAttr(phoneSearchUrl)}" target="_blank" rel="noopener">Kontakt suchen</a>`
+            }
+
+            <a class="btn btn-light" href="${escapeAttr(googleUrl)}" target="_blank" rel="noopener">Google</a>
+          </div>
+
+          <div class="actions">
+            ${
+              lead.maps_url
+                ? `<a class="btn btn-light" href="${escapeAttr(lead.maps_url)}" target="_blank" rel="noopener">Karte</a>`
+                : `<button class="btn-light" disabled>Karte fehlt</button>`
+            }
+
+            <button class="btn-light" onclick="copyLead('${escapeJs(lead.place_id)}')">Text kopieren</button>
+            <button class="btn-light" onclick="hideLead('${escapeJs(lead.place_id)}')">Ausblenden</button>
           </div>
 
           <div class="status-actions">
@@ -704,26 +886,48 @@
     }
 
     async function setLeadStatus(placeId, status) {
+      const lead = leads.find(l => l.place_id === placeId);
+      if (!lead) return;
+
+      lead.status = status;
+      localStatuses[placeId] = status;
+      localStorage.setItem('partnerRadarLocalStatuses', JSON.stringify(localStatuses));
+      render();
+
       try {
-        const data = await jsonp({
+        await callApi({
           action: 'setStatus',
           place_id: placeId,
           status
         });
-
-        if (!data.ok) {
-          alert(data.error || 'Status konnte nicht gespeichert werden.');
-          return;
-        }
-
-        const lead = leads.find(l => l.place_id === placeId);
-        if (lead) lead.status = status;
-
-        render();
-
-      } catch (err) {
-        alert(err.message || String(err));
+      } catch (e) {
+        console.warn('Status nur lokal gespeichert, n8n-Status-Update noch nicht aktiv:', e.message);
       }
+    }
+
+    function hideLead(placeId) {
+      setLeadStatus(placeId, 'AUSGEBLENDET');
+    }
+
+    function copyLead(placeId) {
+      const lead = leads.find(l => l.place_id === placeId);
+      if (!lead) return;
+
+      const text = [
+        `Lead: ${lead.name}`,
+        `Kategorie: ${lead.category}`,
+        `Ort: ${lead.region_name}`,
+        `Telefon: ${lead.phone || '-'}`,
+        `Website: ${lead.website || '-'}`,
+        `Adresse: ${lead.address || '-'}`,
+        `Angebotsidee: ${lead.offer_idea || '-'}`,
+        `Qualität: ${lead.lead_quality || '-'}`,
+        `Aktion: ${lead.next_action || '-'}`
+      ].join('\n');
+
+      navigator.clipboard.writeText(text)
+        .then(() => alert('Lead kopiert.'))
+        .catch(() => alert(text));
     }
 
     function getQualityClass(quality) {
@@ -734,8 +938,35 @@
       return 'badge-d';
     }
 
-    function cleanPhone(phone) {
-      return String(phone || '').replace(/^'/, '').trim();
+    function normalizeUrl(url) {
+      const value = String(url || '').trim();
+      if (!value) return '';
+      if (value.startsWith('http://') || value.startsWith('https://')) return value;
+      return 'https://' + value;
+    }
+
+    function buildGoogleUrl(name, location, suffix) {
+      const q = [name, location, suffix].filter(Boolean).join(' ');
+      return 'https://www.google.com/search?q=' + encodeURIComponent(q);
+    }
+
+    function showError(message) {
+      const box = document.getElementById('errorBox');
+      box.classList.remove('hidden');
+      box.innerHTML = `
+        <strong>Fehler beim Laden.</strong><br><br>
+        ${escapeHtml(message)}
+        <br><br>
+        Falls hier <strong>Failed to fetch</strong> steht, fehlt wahrscheinlich in n8n beim Respond-Node der Header:
+        <br>
+        <code>Access-Control-Allow-Origin: *</code>
+      `;
+    }
+
+    function hideError() {
+      const box = document.getElementById('errorBox');
+      box.classList.add('hidden');
+      box.innerHTML = '';
     }
 
     function escapeHtml(value) {
@@ -755,7 +986,9 @@
       return String(value ?? '')
         .replaceAll('\\', '\\\\')
         .replaceAll("'", "\\'")
-        .replaceAll('"', '\\"');
+        .replaceAll('"', '\\"')
+        .replaceAll('\n', '\\n')
+        .replaceAll('\r', '');
     }
   </script>
 </body>
