@@ -1,15 +1,50 @@
 # n8n Import Contract
 
-Partner Radar CRM nutzt n8n als Lead-Suchmaschine. n8n findet OSM/Overpass-Leads und sendet sie an die Next.js-App. Die Next.js-App normalisiert die Daten und schreibt sie serverseitig in Supabase.
+Live-App: `https://partner-radar-crm.vercel.app`
 
-## Ziel
+Partner Radar CRM nutzt n8n als Lead-Suchmaschine. Die CRM-App startet später den Workflow, n8n sucht OSM/Overpass-Leads und POSTet die Ergebnisse zurück an die geschützte Import-API. Supabase bleibt die Datenbank, aber n8n braucht keinen Supabase Service Role Key.
 
-- n8n sucht Leads.
-- Next.js empfängt Leads unter `/api/imports/osm-leads`.
-- Supabase speichert Leads in `public.leads`.
-- n8n braucht keinen Supabase Service Role Key.
+## CRM-Seiten
 
-## Endpoint
+- Lead-Suche: `/lead-search`
+- Deutsche Alias-Route: `/lead-suche`
+- CRM: `/crm`
+- Settings: `/settings`
+
+## CRM startet n8n
+
+```http
+POST /api/n8n/trigger
+```
+
+Die Route ist durch den CRM-Login geschützt. Wenn n8n vollständig konfiguriert ist, sendet die App an den n8n Webhook:
+
+```json
+{
+  "importRunId": "uuid",
+  "callbackUrl": "https://partner-radar-crm.vercel.app/api/imports/osm-leads",
+  "source": "crm",
+  "mode": "osm_supabase_import",
+  "secretHeaderName": "x-crm-import-secret",
+  "searchConfig": {
+    "region": "Saarbrücken",
+    "categories": ["Bäckerei", "Café"],
+    "quality": "A",
+    "maxLeads": 50,
+    "excludeChains": true,
+    "phoneOnly": false,
+    "testMode": true
+  }
+}
+```
+
+`N8N_WEBHOOK_SECRET` wird nur als Header gesendet, niemals im Body:
+
+```http
+x-crm-import-secret: <N8N_WEBHOOK_SECRET>
+```
+
+## n8n sendet Leads zurück
 
 ```http
 POST /api/imports/osm-leads
@@ -21,18 +56,19 @@ Pflicht-Header:
 x-crm-import-secret: <N8N_WEBHOOK_SECRET>
 ```
 
-Alternativ:
+Alternative:
 
 ```http
 authorization: Bearer <N8N_WEBHOOK_SECRET>
 ```
 
-Der Secret-Wert darf nicht in sichtbare Logs, Screenshots, Debug-Ausgaben oder Payloads geschrieben werden.
+Secrets dürfen nicht in sichtbare Logs, Screenshots, Debug-Ausgaben oder Payloads geschrieben werden.
 
-## Beispiel-Payload
+## Beispiel-Payload von n8n
 
 ```json
 {
+  "importRunId": "optional uuid",
   "source": "n8n-osm",
   "leads": [
     {
@@ -45,6 +81,7 @@ Der Secret-Wert darf nicht in sichtbare Logs, Screenshots, Debug-Ausgaben oder P
       "address": "Beispielstraße 1, 66111 Saarbrücken",
       "phone": "+49681123456",
       "email": "info@example.test",
+      "emails": ["kontakt@example.test"],
       "website": "https://example.test",
       "lat": "49,2311746",
       "lon": "6,9969327",
@@ -68,14 +105,37 @@ Der Secret-Wert darf nicht in sichtbare Logs, Screenshots, Debug-Ausgaben oder P
 - `score`: wird auf `0` bis `100` begrenzt.
 - `lead_quality_code`: nutzt explizit `A/B/C/D`, sonst den ersten Buchstaben aus `lead_quality`.
 - `lead_quality_label`: nutzt `lead_quality_label`, sonst `lead_quality`.
-- `chain_hint`: `LOKAL / UNKLAR` wird `LOCAL`, `KETTE / FILIALE` wird `CHAIN`.
-- `status`: `NEU` wird `NEW`; englische CRM-Status werden direkt akzeptiert.
+- `chain_hint`: `LOKAL / UNKLAR` wird `LOCAL`, `KETTE / FILIALE` wird `CHAIN`, `BRANCH` bleibt `BRANCH`.
+- `status`: `NEU` wird `NEW`; englische CRM-Status werden akzeptiert.
 - `raw_payload`: enthält das originale eingehende Lead-Objekt.
 
 ## Bestehende Leads
 
-Bei bekannten `source_id`s aktualisiert die App nur Quelle/Anreicherung wie Adresse, Website, Kategorie, Score oder Koordinaten. CRM-Workflow-Felder wie Status, Notizen, Termine und Kontaktzähler werden nicht überschrieben.
+Bei bekannten `source_id`s aktualisiert die App nur Anreicherungsfelder wie Adresse, Website, Kategorie, Score oder Koordinaten. CRM-Workflow-Felder wie Status, Notizen, Termine, E-Mail-Entwürfe und Kontaktzähler werden nicht überschrieben.
 
-## Lokal vs. Produktion
+## Health Check
 
-Ein extern laufendes n8n kann `localhost` nicht direkt erreichen. Für lokale Tests braucht es einen Tunnel wie ngrok oder später eine echte Produktions-URL. In Produktion sollte `NEXT_PUBLIC_APP_URL` auf die öffentliche CRM-URL zeigen.
+```http
+GET /api/imports/osm-leads/health
+```
+
+Die Antwort enthält nur sichere Statuswerte:
+
+```json
+{
+  "ok": true,
+  "has_import_secret": true,
+  "app_url_present": true,
+  "data_mode": "supabase"
+}
+```
+
+## Erste Tests nach Deployment
+
+1. Health Endpoint prüfen: `/api/imports/osm-leads/health`.
+2. `/lead-search` öffnen und sicherstellen, dass n8n als konfiguriert angezeigt wird.
+3. Im Testmodus einen kleinen Workflow auslösen.
+4. n8n POSTet mit `x-crm-import-secret` an `/api/imports/osm-leads`.
+5. Danach `/crm` neu laden und importierte Leads prüfen.
+
+Wenn n8n extern läuft, muss `NEXT_PUBLIC_APP_URL` auf die öffentliche CRM-URL zeigen. Für lokale Tests braucht ein externes n8n einen Tunnel oder eine Deploy-URL.

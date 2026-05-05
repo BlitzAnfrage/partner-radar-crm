@@ -21,11 +21,12 @@ export default async function SettingsPage() {
         <StatusCard icon={<Database />} label="Supabase URL present" value={status.supabaseUrlPresent ? "yes" : "no"} ok={status.supabaseUrlPresent} />
         <StatusCard icon={<KeyRound />} label="Supabase service key present" value={status.supabaseServiceRolePresent ? "yes" : "no"} ok={status.supabaseServiceRolePresent} />
         <StatusCard icon={<Workflow />} label="n8n URL present" value={status.n8nWebhookUrlPresent ? "yes" : "no"} ok={status.n8nWebhookUrlPresent} />
+        <StatusCard icon={<Workflow />} label="App URL present" value={status.appUrlPresent ? "yes" : "no"} ok={status.appUrlPresent} />
         <StatusCard icon={<Lock />} label="Admin Gate" value={status.adminPasswordPrepared ? "vorbereitet" : "leer"} ok={status.adminPasswordPrepared} />
         <StatusCard icon={<KeyRound />} label="n8n secret present" value={status.n8nWebhookSecretPresent ? "yes" : "no"} ok={status.n8nWebhookSecretPresent} />
       </div>
 
-      <N8nImportCard configured={status.n8nWebhookUrlPresent && status.n8nWebhookSecretPresent} lastStatus={latestImport?.status ?? "keiner"} />
+      <N8nImportCard configured={status.n8nWebhookUrlPresent && status.n8nWebhookSecretPresent && status.appUrlPresent} lastStatus={latestImport?.status ?? "keiner"} />
     </div>
   );
 }

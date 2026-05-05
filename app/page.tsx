@@ -1,5 +1,6 @@
 import { DashboardGrid } from "@/components/dashboard/dashboard-grid";
 import { PageHeader } from "@/components/layout/page-header";
+import { getDataMode } from "@/lib/crm/config";
 import { toSafeCrmError } from "@/lib/crm/errors";
 import { listImportRuns } from "@/lib/crm/import-runs";
 import { listLeads } from "@/lib/crm/repository";
@@ -14,6 +15,7 @@ export default async function HomePage() {
     .then((runs) => runs[0] ?? null)
     .catch(() => null);
   const leads = result.leads;
+  const dataMode = getDataMode();
 
   return (
     <div>
@@ -30,7 +32,7 @@ export default async function HomePage() {
             <h2 className="text-lg font-semibold tracking-tight">Top Regionen</h2>
           </div>
           <div className="space-y-3">
-            {Array.from(new Set(leads.map((lead) => lead.regionName)))
+            {Array.from(new Set(leads.map((lead) => lead.regionName || "Offen")))
               .slice(0, 5)
               .map((region) => {
                 const count = leads.filter((lead) => lead.regionName === region).length;
@@ -42,6 +44,10 @@ export default async function HomePage() {
                 );
               })}
           </div>
+        </section>
+        <section className="rounded-[2rem] bg-white p-6 shadow-soft lg:hidden">
+          <div className="text-sm text-slate-500">Datenmodus</div>
+          <div className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{dataMode}</div>
         </section>
         <section className="rounded-[2rem] bg-[#101216] p-6 text-white shadow-soft">
           <div className="text-sm text-white/45">Letzter Import</div>

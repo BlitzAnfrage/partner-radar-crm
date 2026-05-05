@@ -2,6 +2,7 @@
 
 import { Play, RotateCcw } from "lucide-react";
 import { useState } from "react";
+import type { ImportRun } from "@/lib/crm/import-runs";
 import { leadSearchCategories, leadSearchQualities, leadSearchRegions } from "@/lib/lead-search/options";
 
 type TriggerResponse = {
@@ -11,7 +12,7 @@ type TriggerResponse = {
   importRunId?: string;
 };
 
-export function LeadSearchForm({ configured }: { configured: boolean }) {
+export function LeadSearchForm({ configured, importRuns }: { configured: boolean; importRuns: ImportRun[] }) {
   const [region, setRegion] = useState("Saarbrücken");
   const [categories, setCategories] = useState<string[]>(["Bäckerei", "Café", "Restaurant"]);
   const [quality, setQuality] = useState("A");
@@ -47,7 +48,7 @@ export function LeadSearchForm({ configured }: { configured: boolean }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        search: {
+        searchConfig: {
           region,
           categories,
           quality,
@@ -66,13 +67,16 @@ export function LeadSearchForm({ configured }: { configured: boolean }) {
     }
 
     const payload = (await response.json().catch(() => ({}))) as TriggerResponse;
-    setMessage(payload.message ?? "Antwort erhalten.");
+    setMessage(payload.message ?? (response.ok ? "Lead-Suche wurde vorbereitet." : "Lead-Suche konnte nicht gestartet werden."));
     setLoading(false);
   };
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+    <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
       <section className="rounded-[2rem] bg-white p-6 shadow-soft">
+        <div className="mb-6 max-w-2xl text-sm leading-6 text-slate-500">
+          Starte eine kontrollierte n8n-Suche. Im Testmodus kann der Workflow später begrenzt laufen.
+        </div>
         <div className="grid gap-5 sm:grid-cols-2">
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-500">Region</span>
@@ -117,6 +121,7 @@ export function LeadSearchForm({ configured }: { configured: boolean }) {
           </label>
 
           <div className="grid gap-3 rounded-2xl bg-slate-50 p-4">
+            <div className="text-sm font-semibold text-slate-900">Filter</div>
             <Toggle label="Ketten ausschließen" checked={excludeChains} onChange={setExcludeChains} />
             <Toggle label="nur mit Telefon" checked={phoneOnly} onChange={setPhoneOnly} />
             <Toggle label="Testmodus" checked={testMode} onChange={setTestMode} />
@@ -164,20 +169,58 @@ export function LeadSearchForm({ configured }: { configured: boolean }) {
           </button>
         </div>
 
-        {message ? <div className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm font-medium text-slate-700">{message}</div> : null}
+        {message ? (
+          <div className={`mt-5 rounded-2xl p-4 text-sm font-medium ${configured ? "bg-slate-50 text-slate-700" : "bg-amber-50 text-amber-900"}`}>
+            {message}
+          </div>
+        ) : null}
       </section>
 
-      <aside className="rounded-[2rem] bg-[#101216] p-6 text-white shadow-soft">
-        <div className="text-sm text-white/45">n8n Status</div>
-        <div className="mt-3 text-3xl font-semibold tracking-tight">{configured ? "Bereit" : "Offen"}</div>
-        <div className="mt-8 space-y-3 text-sm text-white/65">
-          <div className="rounded-2xl bg-white/10 p-4">Region: {region}</div>
-          <div className="rounded-2xl bg-white/10 p-4">{categories.length} Kategorien</div>
-          <div className="rounded-2xl bg-white/10 p-4">{testMode ? "Testmodus aktiv" : "Live-Suche vorbereitet"}</div>
-        </div>
+      <aside className="space-y-5">
+        <section className="rounded-[2rem] bg-[#101216] p-6 text-white shadow-soft">
+          <div className="text-sm text-white/45">n8n Status</div>
+          <div className="mt-3 text-3xl font-semibold tracking-tight">{configured ? "Bereit" : "Offen"}</div>
+          <div className="mt-8 space-y-3 text-sm text-white/65">
+            <div className="rounded-2xl bg-white/10 p-4">Region: {region}</div>
+            <div className="rounded-2xl bg-white/10 p-4">{categories.length} Kategorien</div>
+            <div className="rounded-2xl bg-white/10 p-4">{testMode ? "Testmodus aktiv" : "Live-Suche vorbereitet"}</div>
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] bg-white p-6 shadow-soft">
+          <div className="mb-4 text-lg font-semibold tracking-tight text-slate-950">Letzte Importläufe</div>
+          <div className="space-y-3">
+            {importRuns.length ? (
+              importRuns.map((run) => (
+                <div key={run.id} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-slate-900">{run.source}</div>
+                    <div className="text-xs text-slate-500">{run.leads_inserted} neu · {run.leads_updated} aktualisiert</div>
+                  </div>
+                  <StatusBadge status={run.status} />
+                </div>
+              ))
+            ) : (
+              <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">Noch keine Importläufe.</div>
+            )}
+          </div>
+        </section>
       </aside>
     </div>
   );
+}
+
+function StatusBadge({ status }: { status: ImportRun["status"] }) {
+  const className =
+    status === "SUCCESS"
+      ? "bg-emerald-50 text-emerald-700"
+      : status === "FAILED"
+        ? "bg-red-50 text-red-700"
+        : status === "RUNNING"
+          ? "bg-blue-50 text-blue-700"
+          : "bg-slate-100 text-slate-600";
+
+  return <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${className}`}>{status}</span>;
 }
 
 function Toggle({

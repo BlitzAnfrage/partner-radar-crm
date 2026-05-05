@@ -8,7 +8,13 @@ export function toSafeCrmError(error: unknown) {
   }
 
   if (error instanceof Error) {
-    return error.message;
+    if (error.message.includes("Missing Supabase server configuration")) {
+      return "Supabase ist serverseitig noch nicht vollständig konfiguriert.";
+    }
+
+    if (error.message.includes("service role")) {
+      return "Supabase Server-Konfiguration verwendet keinen gültigen Service-Role-Zugriff.";
+    }
   }
 
   return "CRM-Daten konnten nicht geladen werden.";

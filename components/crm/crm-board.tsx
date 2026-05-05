@@ -85,7 +85,10 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
       if (payload.lead) {
         setLeads((current) => current.map((item) => (item.id === lead.id ? payload.lead as Lead : item)));
       }
+      return true;
     }
+
+    return false;
   };
 
   const callLead = (lead: Lead) => {
@@ -223,13 +226,14 @@ function LeadCard({
   lead: Lead;
   onCall: (lead: Lead) => void;
   onMail: (lead: Lead) => void;
-  onPatch: (patch: LeadPatch) => void;
+  onPatch: (patch: LeadPatch) => Promise<boolean>;
 }) {
   const [draftStatus, setDraftStatus] = useState<LeadStatus>(lead.status);
   const [callNote, setCallNote] = useState(lead.callNote);
   const [appointmentAt, setAppointmentAt] = useState(lead.appointmentAt ?? "");
   const [appointmentNote, setAppointmentNote] = useState(lead.appointmentNote);
   const [internalNotes, setInternalNotes] = useState(lead.internalNotes);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
     setDraftStatus(lead.status);
@@ -239,26 +243,42 @@ function LeadCard({
     setInternalNotes(lead.internalNotes);
   }, [lead]);
 
+  const save = async () => {
+    setSaveState("saving");
+    const ok = await onPatch({
+      status: draftStatus,
+      callNote,
+      appointmentAt: appointmentAt || null,
+      appointmentNote,
+      internalNotes,
+      lastContactResult: draftStatus === "APPOINTMENT" ? "Termin geplant" : lead.lastContactResult
+    });
+    setSaveState(ok ? "saved" : "error");
+    window.setTimeout(() => setSaveState("idle"), 2200);
+  };
+
   return (
-    <article className="rounded-[1.75rem] bg-white p-5 shadow-soft">
+    <article className="rounded-[1.5rem] bg-white p-4 shadow-soft sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="truncate text-xl font-semibold tracking-tight text-slate-950">{lead.companyName}</h2>
-          <div className="mt-1 text-sm text-slate-500">{lead.address || "Adresse offen"}</div>
+          <div className="mt-1 truncate text-sm text-slate-500">{lead.address || "Adresse offen"}</div>
         </div>
-        <div className="rounded-2xl bg-slate-950 px-3 py-2 text-sm font-semibold text-white">{lead.leadQuality || "-"}</div>
+        <div className="shrink-0 rounded-2xl bg-slate-950 px-3 py-2 text-sm font-semibold text-white">{lead.leadQuality || "-"}</div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-        <Info label="Kontakt" value={lead.contactPerson || "Offen"} />
-        <Info label="Region" value={lead.regionName || "Offen"} />
         <Info label="Kategorie" value={lead.category || "Offen"} />
+        <Info label="Region" value={lead.regionName || "Offen"} />
         <Info label="Typ" value={chainHintLabels[lead.chainHint]} />
         <Info label="Telefon" value={lead.phone || "Fehlt"} />
         <Info label="E-Mail" value={lead.emails[0] || "Fehlt"} />
+        <Info label="Status" value={statusLabels[lead.status]} />
       </div>
 
-      <div className="mt-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">{lead.openingHours || "Öffnungszeiten offen"}</div>
+      <div className="mt-3 line-clamp-2 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        {lead.openingHours || "Öffnungszeiten offen"}
+      </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
         {lead.phone ? (
@@ -321,21 +341,15 @@ function LeadCard({
             {lead.contactCount} Kontakte · {lead.lastContactResult}
           </div>
           <button
-            onClick={() =>
-              onPatch({
-                status: draftStatus,
-                callNote,
-                appointmentAt: appointmentAt || null,
-                appointmentNote,
-                internalNotes,
-                lastContactResult: draftStatus === "APPOINTMENT" ? "Termin geplant" : lead.lastContactResult
-              })
-            }
-            className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+            onClick={save}
+            disabled={saveState === "saving"}
+            className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Speichern
+            {saveState === "saving" ? "Speichert..." : "Speichern"}
           </button>
         </div>
+        {saveState === "saved" ? <div className="text-sm font-medium text-emerald-700">Gespeichert.</div> : null}
+        {saveState === "error" ? <div className="text-sm font-medium text-red-700">Speichern fehlgeschlagen.</div> : null}
       </div>
     </article>
   );

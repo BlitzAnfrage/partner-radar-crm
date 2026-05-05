@@ -129,5 +129,7 @@ async function upsertImportedLeads(rows: ImportedLeadRow[]) {
 }
 
 function safeError(error: unknown) {
-  return error instanceof Error ? error.message : "Import failed";
+  return error instanceof Error && error.message.includes("Unauthorized")
+    ? "Unauthorized"
+    : "Import konnte nicht verarbeitet werden.";
 }
