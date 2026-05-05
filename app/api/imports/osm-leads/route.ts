@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createImportRun, updateImportRun } from "@/lib/crm/import-runs";
+import { verifyImportSecret } from "@/lib/imports/import-secret";
 import {
   mapIncomingOsmLeads,
   toExistingLeadUpdate,
@@ -17,8 +18,9 @@ type ImportRequestBody = {
 };
 
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = verifyImportSecret(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ error: "Unauthorized", diagnostics: auth.diagnostics }, { status: 401 });
   }
 
   const body = (await request.json().catch(() => null)) as ImportRequestBody | null;
@@ -78,18 +80,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: safeError(error) }, { status: 500 });
   }
-}
-
-function isAuthorized(request: Request) {
-  const expected = process.env.N8N_WEBHOOK_SECRET;
-  if (!expected) return false;
-
-  const headerSecret = request.headers.get("x-crm-import-secret");
-  const authorization = request.headers.get("authorization");
-  const bearerSecret = authorization?.startsWith("Bearer ") ? authorization.slice("Bearer ".length) : null;
-  const received = headerSecret ?? bearerSecret;
-
-  return Boolean(received && received === expected);
 }
 
 async function upsertImportedLeads(rows: ImportedLeadRow[]) {
