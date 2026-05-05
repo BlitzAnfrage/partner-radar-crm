@@ -22,8 +22,7 @@ export default async function HomePage() {
     (lead) =>
       lead.status === "NEW" &&
       (lead.leadQuality === "A" || lead.leadQuality === "B") &&
-      Boolean(lead.phone) &&
-      lead.chainHint === "LOCAL"
+      Boolean(lead.phone)
   ).length;
 
   return (
@@ -59,7 +58,7 @@ export default async function HomePage() {
           <div className="mt-3 text-4xl font-semibold tracking-tight text-slate-950">{callTodayCount}</div>
           <div className="mt-2 text-sm text-slate-500">A/B Leads mit Telefonnummer und Status Neu</div>
           <Link
-            href="/crm?callList=1"
+            href="/crm?quality=AB&phone=present&status=NEW"
             className="mt-6 inline-flex h-11 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
           >
             Zur Anrufliste

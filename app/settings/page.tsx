@@ -16,7 +16,7 @@ export default async function SettingsPage() {
   return (
     <div>
       <PageHeader title="Einstellungen" eyebrow="System" />
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatusCard icon={<ServerCog />} label="Datenmodus" value={status.dataMode} ok={status.dataMode === "supabase"} />
         <StatusCard icon={<Database />} label="Datenbankmodus" value={status.dataMode === "supabase" ? "aktiv" : "Mock-Fallback"} ok={status.dataMode === "supabase"} />
         <StatusCard icon={<Database />} label="Supabase URL" value={status.supabaseUrlPresent ? "vorhanden" : "fehlt"} ok={status.supabaseUrlPresent} />
@@ -44,15 +44,15 @@ function StatusCard({
   ok: boolean;
 }) {
   return (
-    <section className="rounded-[2rem] bg-white p-6 shadow-soft">
-      <div className="mb-6 flex items-center justify-between">
-        <span className="rounded-2xl bg-slate-100 p-3 text-slate-700 [&>svg]:h-5 [&>svg]:w-5">{icon}</span>
-        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${ok ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+    <section className="rounded-[1.5rem] border border-slate-100 bg-white p-4 shadow-soft">
+      <div className="mb-5 flex items-center justify-between">
+        <span className="rounded-2xl bg-slate-100 p-2.5 text-slate-700 [&>svg]:h-4 [&>svg]:w-4">{icon}</span>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${ok ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
           {ok ? "bereit" : "offen"}
         </span>
       </div>
       <div className="text-sm font-medium text-slate-500">{label}</div>
-      <div className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{value}</div>
+      <div className="mt-1 text-xl font-semibold tracking-tight text-slate-950">{value}</div>
     </section>
   );
 }

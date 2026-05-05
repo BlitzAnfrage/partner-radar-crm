@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Play, RotateCcw } from "lucide-react";
+import { Check, ChevronDown, Play, RotateCcw, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { ImportRun } from "@/lib/crm/import-runs";
 import { categoryPresets, categoryRegistry, type CategoryDefinition } from "@/lib/crm/categories";
@@ -28,6 +28,7 @@ export function LeadSearchForm({
   const [region, setRegion] = useState("Saarbrücken");
   const [categoryIds, setCategoryIds] = useState<string[]>(defaultLeadSearchCategoryIds);
   const [categorySearch, setCategorySearch] = useState("");
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [qualities, setQualities] = useState<string[]>(["A", "B"]);
   const [maxLeads, setMaxLeads] = useState(30);
   const [maxSearchJobs, setMaxSearchJobs] = useState(3);
@@ -36,6 +37,7 @@ export function LeadSearchForm({
   const [testMode, setTestMode] = useState(true);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
   const runningImport = importRuns.some((run) => run.status === "RUNNING");
   const activeBlockingImport = importRuns.some((run) => run.status === "RUNNING" && !isStaleRunning(run));
   const selectedCategories = categoryRegistry.filter((category) => categoryIds.includes(category.id));
@@ -54,10 +56,21 @@ export function LeadSearchForm({
     );
   };
 
+  const toggleGroup = (categories: CategoryDefinition[]) => {
+    const groupIds = categories.map((category) => category.id);
+    const allSelected = groupIds.every((id) => categoryIds.includes(id));
+    setCategoryIds((current) =>
+      allSelected
+        ? current.filter((id) => !groupIds.includes(id))
+        : Array.from(new Set([...current, ...groupIds]))
+    );
+  };
+
   const reset = () => {
     setRegion("Saarbrücken");
     setCategoryIds(defaultLeadSearchCategoryIds);
     setCategorySearch("");
+    setCategoriesOpen(false);
     setQualities(["A", "B"]);
     setMaxLeads(30);
     setMaxSearchJobs(3);
@@ -118,21 +131,26 @@ export function LeadSearchForm({
   };
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
-      <section className="rounded-[2rem] bg-white p-6 shadow-soft">
-        <div className="mb-6">
-          <div className="text-xl font-semibold tracking-tight text-slate-950">Starte eine kontrollierte Lead-Suche über n8n.</div>
-          <div className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-            Empfohlen: A/B Leads, nur mit Telefonnummer, Ketten ausschließen.
+    <div className="space-y-5">
+      <section className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-soft sm:p-7">
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="text-2xl font-semibold tracking-tight text-slate-950">Kontrollierte Lead-Suche</div>
+            <div className="mt-2 text-sm text-slate-500">A/B Leads, Telefon, lokale Betriebe. Ruhig starten, sauber importieren.</div>
+          </div>
+          <div className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
+            <span className={`h-2 w-2 rounded-full ${configured ? "bg-emerald-500" : "bg-amber-500"}`} />
+            n8n {configured ? "bereit" : "offen"} · URL {webhookUrlPresent ? "ok" : "fehlt"} · Secret {webhookSecretPresent ? "ok" : "fehlt"}
           </div>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2">
+
+        <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-500">Region</span>
             <select
               value={region}
               onChange={(event) => setRegion(event.target.value)}
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-slate-400"
+              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
             >
               {leadSearchRegions.map((item) => (
                 <option key={item} value={item}>
@@ -142,10 +160,90 @@ export function LeadSearchForm({
             </select>
           </label>
 
+          <div className="relative">
+            <span className="mb-2 block text-sm font-medium text-slate-500">Kategorien</span>
+            <button
+              type="button"
+              onClick={() => setCategoriesOpen((current) => !current)}
+              className="flex h-12 w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-left text-sm outline-none transition hover:bg-white"
+            >
+              <span className="min-w-0 truncate font-medium text-slate-800">
+                {selectedCategories.length ? `${selectedCategories.length} Kategorien` : "Kategorien auswählen"}
+              </span>
+              <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+            </button>
+            {categoriesOpen ? (
+              <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-soft">
+                <div className="border-b border-slate-100 p-3">
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      value={categorySearch}
+                      onChange={(event) => setCategorySearch(event.target.value)}
+                      placeholder="Branche suchen"
+                      className="h-10 w-full rounded-2xl bg-slate-50 pl-9 pr-3 text-sm outline-none focus:bg-white"
+                    />
+                  </div>
+                </div>
+                <div className="max-h-96 space-y-4 overflow-auto p-3">
+                  {Object.entries(groupedCategories).map(([group, categories]) => {
+                    const groupIds = categories.map((category) => category.id);
+                    const selectedCount = groupIds.filter((id) => categoryIds.includes(id)).length;
+                    const allSelected = selectedCount === groupIds.length;
+                    return (
+                      <div key={group} className="rounded-2xl bg-slate-50 p-3">
+                        <button
+                          type="button"
+                          onClick={() => toggleGroup(categories)}
+                          className="mb-2 flex w-full items-center justify-between text-left"
+                        >
+                          <span className="text-sm font-semibold text-slate-900">{group}</span>
+                          <span className="text-xs font-medium text-slate-500">{selectedCount}/{groupIds.length}</span>
+                        </button>
+                        <div className="grid gap-1 sm:grid-cols-2">
+                          {categories.map((category) => {
+                            const active = categoryIds.includes(category.id);
+                            return (
+                              <label key={category.id} className="flex cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 text-sm text-slate-700 hover:bg-white">
+                                <input
+                                  type="checkbox"
+                                  checked={active}
+                                  onChange={() => toggleCategory(category.id)}
+                                  className="h-4 w-4 accent-slate-950"
+                                />
+                                <span className="truncate">{category.label}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        {allSelected ? <div className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700"><Check className="h-3 w-3" /> Gruppe aktiv</div> : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {categoryPresets.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => setCategoryIds(preset.categoryIds)}
+              className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div>
             <span className="mb-2 block text-sm font-medium text-slate-500">Qualität</span>
             <div className="flex h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3">
-            {["A", "B", "C", "D"].map((quality) => (
+              {["A", "B", "C", "D"].map((quality) => (
                 <button
                   key={quality}
                   type="button"
@@ -159,113 +257,50 @@ export function LeadSearchForm({
               ))}
             </div>
           </div>
-
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-500">max. Leads</span>
-            <input
-              type="number"
-              min={1}
-              max={500}
-              value={maxLeads}
-              onChange={(event) => setMaxLeads(Number(event.target.value))}
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-slate-400"
-            />
-          </label>
-
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-500">max. Suchjobs</span>
-            <input
-              type="number"
-              min={1}
-              max={20}
-              value={maxSearchJobs}
-              onChange={(event) => setMaxSearchJobs(Number(event.target.value))}
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-slate-400"
-            />
-          </label>
-
-          <div className="grid gap-3 rounded-2xl bg-slate-50 p-4">
-            <div className="text-sm font-semibold text-slate-900">Filter</div>
-            <Toggle label="Ketten ausschließen" checked={excludeChains} onChange={setExcludeChains} />
-            <Toggle label="nur mit Telefon" checked={phoneOnly} onChange={setPhoneOnly} />
-            <Toggle label="Testmodus" checked={testMode} onChange={setTestMode} />
+          <NumberField label="max. Leads" value={maxLeads} min={1} max={500} onChange={setMaxLeads} />
+          <NumberField label="max. Suchjobs" value={maxSearchJobs} min={1} max={20} onChange={setMaxSearchJobs} />
+          <div className="rounded-2xl bg-slate-50 p-4">
+            <div className="mb-3 text-sm font-semibold text-slate-900">Modus</div>
+            <div className="space-y-2">
+              <Toggle label="Ketten ausschließen" checked={excludeChains} onChange={setExcludeChains} />
+              <Toggle label="nur mit Telefon" checked={phoneOnly} onChange={setPhoneOnly} />
+              <Toggle label="Testmodus" checked={testMode} onChange={setTestMode} />
+            </div>
           </div>
         </div>
 
-        <div className="mt-6">
-          <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm font-medium text-slate-500">Kategorien</div>
-            <input
-              value={categorySearch}
-              onChange={(event) => setCategorySearch(event.target.value)}
-              placeholder="Kategorie suchen"
-              className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-slate-400"
-            />
+        <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            Kostenloser Modus: 3-5 Suchjobs, 30-50 Leads. Aktuell ca. {estimatedSeconds}s.{" "}
+            {activeBlockingImport ? "Es läuft bereits eine Suche." : "Mehr Suchjobs brauchen länger."}
           </div>
-          <div className="mb-3 flex flex-wrap gap-2">
-            {categoryPresets.map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => setCategoryIds(preset.categoryIds)}
-                className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-          <div className="max-h-80 space-y-4 overflow-auto rounded-2xl border border-slate-100 bg-slate-50 p-3">
-            {Object.entries(groupedCategories).map(([group, categories]) => (
-              <div key={group}>
-                <div className="mb-2 text-xs font-semibold uppercase text-slate-400">{group}</div>
-                <div className="flex flex-wrap gap-2">
-                  {categories.map((category) => {
-                    const active = categoryIds.includes(category.id);
-                    return (
-                      <button
-                        key={category.id}
-                        type="button"
-                        onClick={() => toggleCategory(category.id)}
-                        className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                          active ? "bg-slate-950 text-white" : "bg-white text-slate-700 hover:bg-slate-100"
-                        }`}
-                      >
-                        {category.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={startSearch}
+              disabled={!configured || activeBlockingImport || loading || selectedCategories.length === 0 || qualities.length === 0}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Play className="h-4 w-4" />
+              {loading ? "Startet..." : "Lead-Suche starten"}
+            </button>
+            <button
+              type="button"
+              onClick={reset}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-100 px-5 text-sm font-semibold text-slate-800 transition hover:bg-slate-200"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Zurücksetzen
+            </button>
           </div>
         </div>
 
-        <div className="mt-5 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-          Aktiv: {qualities.join("/")} Leads · {selectedCategories.length} Kategorien · {phoneOnly ? "nur mit Telefonnummer" : "Telefon optional"} ·{" "}
-          {excludeChains ? "keine Ketten" : "Ketten erlaubt"} · ca. {estimatedSeconds}s
-        </div>
-        <div className="mt-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          Empfohlen im kostenlosen Modus: 3 bis 5 Suchjobs und 30 bis 50 Leads. Mehr Suchjobs dauern länger und können Overpass stärker belasten.
-        </div>
-
-        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <button
-            type="button"
-            onClick={startSearch}
-            disabled={!configured || activeBlockingImport || loading || selectedCategories.length === 0 || qualities.length === 0}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Play className="h-4 w-4" />
-            {loading ? "Startet..." : "Lead-Suche starten"}
-          </button>
-          <button
-            type="button"
-            onClick={reset}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-100 px-5 text-sm font-semibold text-slate-800 transition hover:bg-slate-200"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Zurücksetzen
-          </button>
+        <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
+          <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-emerald-800">{qualities.join("/") || "keine"} Leads</span>
+          <span className="rounded-full bg-slate-100 px-3 py-1.5">{selectedCategories.length} Kategorien</span>
+          <span className="rounded-full bg-slate-100 px-3 py-1.5">{phoneOnly ? "Telefon Pflicht" : "Telefon optional"}</span>
+          <span className="rounded-full bg-slate-100 px-3 py-1.5">{excludeChains ? "ohne Ketten" : "Ketten erlaubt"}</span>
+          <span className="rounded-full bg-slate-100 px-3 py-1.5">{testMode ? "Testmodus" : "Live-Modus"}</span>
         </div>
 
         {message ? (
@@ -285,53 +320,68 @@ export function LeadSearchForm({
         ) : null}
       </section>
 
-      <aside className="space-y-5">
-        <section className="rounded-[2rem] bg-[#101216] p-6 text-white shadow-soft">
-          <div className="text-sm text-white/45">n8n Status</div>
-          <div className="mt-3 text-3xl font-semibold tracking-tight">{configured ? "Bereit" : "Offen"}</div>
-          <div className="mt-8 space-y-3 text-sm text-white/65">
-            <div className="rounded-2xl bg-white/10 p-4">Webhook URL: {webhookUrlPresent ? "vorhanden" : "fehlt"}</div>
-            <div className="rounded-2xl bg-white/10 p-4">Webhook Secret: {webhookSecretPresent ? "vorhanden" : "fehlt"}</div>
-            <div className="rounded-2xl bg-white/10 p-4">Region: {region}</div>
-            <div className="rounded-2xl bg-white/10 p-4">{selectedCategories.length} Kategorien · {qualities.join("/") || "keine Qualität"}</div>
-            <div className="rounded-2xl bg-white/10 p-4">{maxLeads} Leads · {maxSearchJobs} Suchjobs</div>
-            <div className="rounded-2xl bg-white/10 p-4">{testMode ? "Testmodus aktiv" : "Live-Suche vorbereitet"}</div>
-          </div>
-        </section>
-
-        <section className="rounded-[2rem] bg-white p-6 shadow-soft">
-          <div className="mb-4 text-lg font-semibold tracking-tight text-slate-950">Letzte Importläufe</div>
+      <section className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-soft sm:p-6">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="text-lg font-semibold tracking-tight text-slate-950">Letzte Importläufe</div>
           {runningImport ? (
-            <div className="mb-3 rounded-2xl bg-blue-50 p-4 text-sm font-medium text-blue-800">
-              {activeBlockingImport ? "Es läuft bereits eine Suche." : "Ein alter Import läuft noch. Wahrscheinlich hängen geblieben."}
+            <div className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+              {activeBlockingImport ? "läuft" : "wahrscheinlich hängen geblieben"}
             </div>
           ) : null}
-          <div className="space-y-3">
-            {importRuns.length ? (
-              importRuns.map((run) => (
-                <div key={run.id} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold text-slate-900">{run.source}</div>
-                    <div className="text-xs text-slate-500">
-                      {run.leads_found} gefunden · {run.leads_inserted} neu · {run.leads_updated} aktualisiert
-                      {getSkippedExisting(run) ? ` · ${getSkippedExisting(run)} übersprungen` : ""}
-                    </div>
-                    {run.error_message ? <div className="mt-1 truncate text-xs text-red-600">{run.error_message}</div> : null}
-                    <div className="mt-1 text-xs text-slate-400">
-                      {formatDate(run.created_at)}
-                      {isStaleRunning(run) ? " · Wahrscheinlich hängen geblieben" : ""}
-                    </div>
+        </div>
+        <div className="grid gap-3 lg:grid-cols-2">
+          {importRuns.length ? (
+            importRuns.map((run) => (
+              <div key={run.id} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold text-slate-900">{run.source}</div>
+                  <div className="text-xs text-slate-500">
+                    {run.leads_found} gefunden · {run.leads_inserted} neu · {run.leads_updated} aktualisiert
+                    {getSkippedExisting(run) ? ` · ${getSkippedExisting(run)} übersprungen` : ""}
                   </div>
-                  <StatusBadge status={run.status} />
+                  {run.error_message ? <div className="mt-1 truncate text-xs text-red-600">{run.error_message}</div> : null}
+                  <div className="mt-1 text-xs text-slate-400">
+                    {formatDate(run.created_at)}
+                    {isStaleRunning(run) ? " · Wahrscheinlich hängen geblieben" : ""}
+                  </div>
                 </div>
-              ))
-            ) : (
-              <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">Noch keine Importläufe.</div>
-            )}
-          </div>
-        </section>
-      </aside>
+                <StatusBadge status={run.status} />
+              </div>
+            ))
+          ) : (
+            <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">Noch keine Importläufe.</div>
+          )}
+        </div>
+      </section>
     </div>
+  );
+}
+
+function NumberField({
+  label,
+  value,
+  min,
+  max,
+  onChange
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-medium text-slate-500">{label}</span>
+      <input
+        type="number"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
+      />
+    </label>
   );
 }
 
