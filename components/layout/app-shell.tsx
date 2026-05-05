@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Home, LogOut, Search, Settings } from "lucide-react";
+import { BarChart3, Home, LogOut, PhoneCall, Search, Settings } from "lucide-react";
 import clsx from "clsx";
 
 const items = [
   { href: "/", label: "Home", icon: Home },
   { href: "/crm", label: "CRM", icon: BarChart3 },
   { href: "/lead-search", label: "Lead-Suche", icon: Search },
+  { href: "/anrufmodus", label: "Anrufmodus", icon: PhoneCall },
   { href: "/settings", label: "Einstellungen", icon: Settings }
 ];
 

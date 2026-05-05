@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ExternalLink, Mail, MapPin, Phone, RotateCcw, Search, Sparkles } from "lucide-react";
+import { ExternalLink, Mail, MapPin, Phone, PhoneCall, RotateCcw, Search, Sparkles } from "lucide-react";
 import type { ChainHint, Lead, LeadPatch, LeadStatus } from "@/types/crm";
 import { chainHintLabels, leadQualities, leadStatuses, statusLabels } from "@/types/crm";
 import { filterAndSortLeads, type SortMode, uniqueValues } from "@/lib/crm/filtering";
@@ -153,14 +153,23 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
             <div className="text-sm font-semibold text-slate-950">Leads filtern</div>
             <div className="text-xs text-slate-500">{visibleLeads.length} sichtbar</div>
           </div>
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="inline-flex h-10 items-center gap-2 rounded-2xl bg-slate-100 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Zurücksetzen
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/anrufmodus"
+              className="inline-flex h-10 items-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              <PhoneCall className="h-4 w-4" />
+              Anrufmodus starten
+            </Link>
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex h-10 items-center gap-2 rounded-2xl bg-slate-100 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Zurücksetzen
+            </button>
+          </div>
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.6fr_repeat(7,minmax(0,1fr))]">
           <label className="relative md:col-span-2 xl:col-span-1">

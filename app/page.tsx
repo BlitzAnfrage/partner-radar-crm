@@ -6,6 +6,7 @@ import { getDataMode } from "@/lib/crm/config";
 import { toSafeCrmError } from "@/lib/crm/errors";
 import { listImportRuns } from "@/lib/crm/import-runs";
 import { listLeads } from "@/lib/crm/repository";
+import { countCallableLeads } from "@/lib/crm/call-queue";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -19,12 +20,7 @@ export default async function HomePage() {
     .catch(() => null);
   const leads = result.leads;
   const dataMode = getDataMode();
-  const callTodayCount = leads.filter(
-    (lead) =>
-      lead.status === "NEW" &&
-      (lead.leadQuality === "A" || lead.leadQuality === "B") &&
-      Boolean(lead.phone)
-  ).length;
+  const callTodayCount = countCallableLeads(leads);
   const newLeadsCount = leads.filter((lead) => lead.status === "NEW").length;
   const topRegions = Array.from(new Set(leads.map((lead) => lead.regionName || "Offen")))
     .map((region) => ({
@@ -43,6 +39,7 @@ export default async function HomePage() {
           <div className="flex flex-wrap gap-2">
             <QuickLink href="/crm">CRM öffnen</QuickLink>
             <QuickLink href="/lead-suche">Lead-Suche</QuickLink>
+            <QuickLink href="/anrufmodus">Anrufmodus</QuickLink>
           </div>
         }
       />
@@ -58,15 +55,18 @@ export default async function HomePage() {
             <div>
               <div className="text-sm font-medium text-slate-500">Heute anrufen</div>
               <div className="mt-3 text-5xl font-semibold tracking-tight text-slate-950">{callTodayCount}</div>
-              <div className="mt-2 text-sm text-slate-500">A/B Leads mit Telefon und Status Neu</div>
+              <div className="mt-2 text-sm text-slate-500">Neue Leads mit Telefonnummer</div>
             </div>
             <StatusPill tone={callTodayCount ? "success" : "neutral"}>{callTodayCount ? "bereit" : "leer"}</StatusPill>
           </div>
           <Link
-            href="/crm?quality=AB&phone=present&status=NEW"
+            href="/anrufmodus"
             className="mt-6 inline-flex h-11 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
           >
-            Zur Anrufliste
+            Anrufmodus starten
+          </Link>
+          <Link href="/crm?quality=AB&phone=present&status=NEW" className="ml-3 mt-6 inline-flex h-11 items-center justify-center rounded-2xl bg-slate-100 px-5 text-sm font-semibold text-slate-800 transition hover:bg-slate-200">
+            CRM öffnen
           </Link>
         </section>
         <section className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-soft">

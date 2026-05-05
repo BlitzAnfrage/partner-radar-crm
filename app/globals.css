@@ -45,3 +45,13 @@ button {
   background: #111827;
   color: white;
 }
+
+@layer components {
+  .btn-dark {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800;
+  }
+
+  .btn-light {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-slate-100 px-5 text-sm font-semibold text-slate-800 transition hover:bg-slate-200;
+  }
+}
