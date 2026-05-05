@@ -1,0 +1,1016 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Partner Radar CRM</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --card2: #f8fafc;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --dark: #0f172a;
+      --dark2: #1e293b;
+      --green: #16a34a;
+      --blue: #2563eb;
+      --orange: #f97316;
+      --red: #dc2626;
+      --purple: #7c3aed;
+      --shadow: 0 12px 30px rgba(15,23,42,.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      padding: 24px 20px 28px;
+    }
+
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      color: #cbd5e1;
+      margin-top: 6px;
+      font-size: 14px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      background: rgba(255,255,255,.1);
+      color: white;
+      border: 1px solid rgba(255,255,255,.15);
+      white-space: nowrap;
+    }
+
+    main {
+      padding: 22px 20px 60px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      background: var(--card2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 13px;
+      min-height: 78px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 24px;
+      letter-spacing: -0.04em;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 12px;
+      padding: 11px 12px;
+      font: inherit;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 76px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #94a3b8;
+      box-shadow: 0 0 0 4px rgba(148,163,184,.18);
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button, .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 900;
+      cursor: pointer;
+      background: #e2e8f0;
+      color: #0f172a;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 13px;
+      transition: transform .08s ease, opacity .08s ease;
+    }
+
+    button:hover, .btn:hover { transform: translateY(-1px); }
+    button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+    .primary { background: var(--dark); color: white; }
+    .green { background: #dcfce7; color: #166534; }
+    .blue { background: #dbeafe; color: #1d4ed8; }
+    .orange { background: #ffedd5; color: #c2410c; }
+    .red { background: #fee2e2; color: #991b1b; }
+    .purple { background: #ede9fe; color: #5b21b6; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .leadList {
+      display: grid;
+      gap: 12px;
+    }
+
+    .lead {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .leadTop {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .leadName {
+      font-size: 20px;
+      font-weight: 950;
+      line-height: 1.1;
+      letter-spacing: -0.035em;
+      margin-bottom: 6px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .tag {
+      border-radius: 999px;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      background: var(--card2);
+      color: #334155;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .tag.a { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .tag.b { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+    .tag.c { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+    .tag.d { background: #f1f5f9; color: #475569; }
+    .tag.chain { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+
+    .score {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      background: #0f172a;
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      font-weight: 950;
+      flex: 0 0 auto;
+    }
+
+    .facts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .fact {
+      background: var(--card2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px;
+      min-height: 58px;
+    }
+
+    .fact small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 850;
+      margin-bottom: 4px;
+    }
+
+    .fact div {
+      font-size: 13px;
+      font-weight: 800;
+      word-break: break-word;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .statusRow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding-top: 4px;
+    }
+
+    .statusBtn {
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .statusBtn.active {
+      outline: 3px solid rgba(15,23,42,.16);
+      background: #0f172a;
+      color: white;
+    }
+
+    .miniForm {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .miniForm textarea {
+      grid-column: 1 / -1;
+    }
+
+    .side {
+      position: sticky;
+      top: 12px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .sideCard {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .sideCard h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      letter-spacing: -0.02em;
+    }
+
+    .scriptBox {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 50px 20px;
+      font-weight: 800;
+    }
+
+    .loading {
+      text-align: center;
+      color: var(--muted);
+      padding: 28px;
+      font-weight: 900;
+    }
+
+    .modalBackdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 50;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 22px;
+      max-width: 640px;
+      width: 100%;
+      padding: 18px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.25);
+    }
+
+    .modal h2 {
+      margin: 0 0 10px;
+      letter-spacing: -0.035em;
+    }
+
+    .field {
+      margin-bottom: 10px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .notice {
+      border-radius: 14px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: #0f172a;
+      color: white;
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+      font-weight: 900;
+      display: none;
+      z-index: 70;
+      max-width: 360px;
+    }
+
+    @media (max-width: 1000px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .filters { grid-template-columns: 1fr; }
+      .layout { grid-template-columns: 1fr; }
+      .side { position: static; }
+      .facts { grid-template-columns: 1fr; }
+      .miniForm { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap topbar">
+      <div>
+        <h1>Partner Radar CRM</h1>
+        <div class="subtitle">Leads aus Sheets/n8n – schnell prüfen, anrufen, Status setzen.</div>
+      </div>
+      <div class="pill" id="apiPill">API nicht verbunden</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <section class="panel">
+        <div class="stats">
+          <div class="stat"><strong id="statTotal">0</strong><span>Leads geladen</span></div>
+          <div class="stat"><strong id="statA">0</strong><span>A-Leads</span></div>
+          <div class="stat"><strong id="statPhone">0</strong><span>mit Telefon</span></div>
+          <div class="stat"><strong id="statInterest">0</strong><span>Interesse/Termin</span></div>
+          <div class="stat"><strong id="statPartner">0</strong><span>Partner</span></div>
+          <div class="stat"><strong id="statVisible">0</strong><span>sichtbar</span></div>
+        </div>
+
+        <div class="filters">
+          <input id="search" placeholder="Suche Name, Adresse, Telefon, Kategorie..." />
+          <select id="categoryFilter"><option value="">Alle Kategorien</option></select>
+          <select id="regionFilter"><option value="">Alle Regionen</option></select>
+          <select id="statusFilter"><option value="">Alle Status</option></select>
+          <select id="qualityFilter"><option value="">Alle Qualitäten</option></select>
+        </div>
+
+        <div class="buttons">
+          <button class="primary" onclick="quickFilter('a')">Nur A-Leads</button>
+          <button onclick="quickFilter('phone')">Nur mit Telefon</button>
+          <button onclick="quickFilter('local')">Nur lokale</button>
+          <button onclick="quickFilter('website')">Website prüfen</button>
+          <button onclick="clearFilters()">Alle anzeigen</button>
+          <button onclick="loadLeads()">Neu laden</button>
+          <button onclick="openSettings()">Einstellungen</button>
+          <button onclick="resetSettings()">Einstellungen löschen</button>
+        </div>
+      </section>
+
+      <div class="layout">
+        <section>
+          <div id="loading" class="loading">Lade Leads...</div>
+          <div id="leadList" class="leadList"></div>
+          <div id="empty" class="empty" style="display:none;">Keine Leads gefunden.</div>
+        </section>
+
+        <aside class="side">
+          <div class="sideCard">
+            <h3>Telefon-Skript</h3>
+            <div class="scriptBox" id="scriptBox">Hallo, hier ist [Dein Name].
+
+Ich baue gerade ein regionales Vorteilsprogramm für Mitarbeiter von Unternehmen im Saarland auf.
+
+Für lokale Betriebe ist die Teilnahme kostenlos.
+
+Es geht nur darum, dass Sie mit einem kleinen Vorteil sichtbar werden, z. B. 10% Rabatt, Mittagsdeal oder ein Sonderangebot.
+
+Wäre das grundsätzlich interessant?</div>
+          </div>
+
+          <div class="sideCard">
+            <h3>Beste Reihenfolge</h3>
+            <div class="scriptBox">1. A-Leads mit Telefon
+2. Lokale Betriebe zuerst
+3. Ketten nur später prüfen
+4. Nach jedem Anruf Status setzen
+5. Bei Interesse Angebot notieren</div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <div class="modalBackdrop" id="settingsModal">
+    <div class="modal">
+      <h2>CRM verbinden</h2>
+      <div class="notice">
+        API URL ist dein n8n Webhook. Token ist dein eigenes Passwort aus dem n8n Token-Node.
+      </div>
+
+      <div class="field">
+        <label>API URL</label>
+        <input id="apiUrl" placeholder="https://n8n.../webhook/partner-radar-crm" />
+      </div>
+
+      <div class="field">
+        <label>Token</label>
+        <input id="apiToken" placeholder="Dein geheimer Token" />
+      </div>
+
+      <div class="buttons">
+        <button class="primary" onclick="saveSettings()">Speichern & laden</button>
+        <button onclick="closeSettings()">Schließen</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const LS_API_URL = 'partnerRadarApiUrlV3';
+    const LS_TOKEN = 'partnerRadarTokenV3';
+    const LS_LOCAL_UPDATES = 'partnerRadarLocalUpdatesV3';
+
+    let allLeads = [];
+    let filteredLeads = [];
+    let localUpdates = loadLocalUpdates();
+
+    const statuses = [
+      'NEU',
+      'ANGERUFEN',
+      'NICHT_ERREICHT',
+      'INTERESSE',
+      'TERMIN',
+      'PARTNER',
+      'ABSAGE',
+      'NICHT_PASSEND',
+      'BLACKLIST'
+    ];
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function showToast(msg) {
+      const el = $('toast');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 2600);
+    }
+
+    function getSettings() {
+      return {
+        apiUrl: localStorage.getItem(LS_API_URL) || '',
+        token: localStorage.getItem(LS_TOKEN) || ''
+      };
+    }
+
+    function setApiPill() {
+      const { apiUrl } = getSettings();
+      $('apiPill').textContent = apiUrl ? 'API verbunden' : 'API nicht verbunden';
+    }
+
+    function openSettings() {
+      const s = getSettings();
+      $('apiUrl').value = s.apiUrl;
+      $('apiToken').value = s.token;
+      $('settingsModal').style.display = 'flex';
+    }
+
+    function closeSettings() {
+      $('settingsModal').style.display = 'none';
+    }
+
+    function saveSettings() {
+      localStorage.setItem(LS_API_URL, $('apiUrl').value.trim());
+      localStorage.setItem(LS_TOKEN, $('apiToken').value.trim());
+      closeSettings();
+      setApiPill();
+      loadLeads();
+    }
+
+    function resetSettings() {
+      localStorage.removeItem(LS_API_URL);
+      localStorage.removeItem(LS_TOKEN);
+      localStorage.removeItem(LS_LOCAL_UPDATES);
+      localUpdates = {};
+      setApiPill();
+      openSettings();
+    }
+
+    function loadLocalUpdates() {
+      try {
+        return JSON.parse(localStorage.getItem(LS_LOCAL_UPDATES) || '{}');
+      } catch {
+        return {};
+      }
+    }
+
+    function saveLocalUpdates() {
+      localStorage.setItem(LS_LOCAL_UPDATES, JSON.stringify(localUpdates));
+    }
+
+    function cleanPhone(phone) {
+      return String(phone || '').replace(/^'/, '').trim();
+    }
+
+    function hasPhone(lead) {
+      return cleanPhone(lead.phone).length > 3;
+    }
+
+    function qualityClass(q) {
+      const s = String(q || '');
+      if (s.startsWith('A')) return 'a';
+      if (s.startsWith('B')) return 'b';
+      if (s.startsWith('C')) return 'c';
+      return 'd';
+    }
+
+    function esc(s) {
+      return String(s ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function norm(s) {
+      return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function buildUrl(action = 'list', extra = {}) {
+      const { apiUrl, token } = getSettings();
+      const url = new URL(apiUrl);
+      url.searchParams.set('token', token);
+      url.searchParams.set('action', action);
+
+      Object.entries(extra).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) url.searchParams.set(k, v);
+      });
+
+      return url.toString();
+    }
+
+    async function loadLeads() {
+      const { apiUrl, token } = getSettings();
+
+      if (!apiUrl || !token) {
+        openSettings();
+        $('loading').style.display = 'none';
+        return;
+      }
+
+      $('loading').style.display = 'block';
+      $('leadList').innerHTML = '';
+      $('empty').style.display = 'none';
+
+      try {
+        const res = await fetch(buildUrl('list'), { method: 'GET' });
+        const data = await res.json();
+
+        let leads = [];
+
+        if (Array.isArray(data)) {
+          leads = data;
+        } else if (Array.isArray(data.leads)) {
+          leads = data.leads;
+        } else if (Array.isArray(data.data)) {
+          leads = data.data;
+        } else if (data.ok === false) {
+          throw new Error(data.error || 'API meldet Fehler.');
+        } else {
+          throw new Error('Unbekanntes API-Format.');
+        }
+
+        allLeads = leads
+          .filter(l => l && (l.place_id || l.name))
+          .map(l => normalizeLead(l))
+          .map(l => ({ ...l, ...(localUpdates[l.place_id] || {}) }));
+
+        allLeads.sort((a, b) => {
+          const prioA = Number(a.crm_priority || 99);
+          const prioB = Number(b.crm_priority || 99);
+          if (prioA !== prioB) return prioA - prioB;
+          return Number(b.score || 0) - Number(a.score || 0);
+        });
+
+        buildFilterOptions();
+        applyFilters();
+        showToast('Leads geladen.');
+
+      } catch (err) {
+        console.error(err);
+        $('leadList').innerHTML = `<div class="empty">Fehler beim Laden.<br><br>${esc(err.message || err)}<br><br>Wenn dort „Failed to fetch“ steht: n8n Respond-Node braucht Header <b>Access-Control-Allow-Origin: *</b></div>`;
+      } finally {
+        $('loading').style.display = 'none';
+      }
+    }
+
+    function normalizeLead(l) {
+      const status = l.status || 'NEU';
+
+      return {
+        place_id: l.place_id || '',
+        name: l.name || '',
+        region_name: l.region_name || '',
+        category_group: l.category_group || '',
+        category: l.category || '',
+        address: l.address || '',
+        phone: cleanPhone(l.phone),
+        website: l.website || '',
+        email: l.email || '',
+        maps_url: l.maps_url || '',
+        google_search_url: l.google_search_url || '',
+        phone_search_url: l.phone_search_url || '',
+        score: Number(String(l.score || 0).replace(',', '.')) || 0,
+        score_reason: l.score_reason || '',
+        lead_quality: l.lead_quality || '',
+        chain_hint: l.chain_hint || '',
+        offer_idea: l.offer_idea || '',
+        opening_hours: l.opening_hours || '',
+        status,
+        next_action: l.next_action || '',
+        crm_priority: l.crm_priority || '',
+        contact_count: Number(l.contact_count || 0) || 0,
+        last_contacted_at: l.last_contacted_at || '',
+        last_contact_result: l.last_contact_result || '',
+        appointment_at: l.appointment_at || '',
+        appointment_note: l.appointment_note || '',
+        call_note: l.call_note || '',
+        partner_offer: l.partner_offer || '',
+        partner_conditions: l.partner_conditions || '',
+        partner_status: l.partner_status || '',
+        internal_notes: l.internal_notes || ''
+      };
+    }
+
+    function buildFilterOptions() {
+      fillSelect('categoryFilter', 'Alle Kategorien', unique(allLeads.map(l => l.category).filter(Boolean)));
+      fillSelect('regionFilter', 'Alle Regionen', unique(allLeads.map(l => l.region_name).filter(Boolean)));
+      fillSelect('statusFilter', 'Alle Status', statuses);
+      fillSelect('qualityFilter', 'Alle Qualitäten', unique(allLeads.map(l => l.lead_quality).filter(Boolean)));
+    }
+
+    function unique(arr) {
+      return [...new Set(arr)].sort((a, b) => String(a).localeCompare(String(b)));
+    }
+
+    function fillSelect(id, label, values) {
+      const current = $(id).value;
+      $(id).innerHTML = `<option value="">${label}</option>` + values.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+      if (values.includes(current)) $(id).value = current;
+    }
+
+    function applyFilters() {
+      const q = norm($('search').value);
+      const category = $('categoryFilter').value;
+      const region = $('regionFilter').value;
+      const status = $('statusFilter').value;
+      const quality = $('qualityFilter').value;
+
+      filteredLeads = allLeads.filter(l => {
+        const haystack = norm([
+          l.name,
+          l.address,
+          l.phone,
+          l.email,
+          l.category,
+          l.category_group,
+          l.region_name,
+          l.lead_quality,
+          l.chain_hint,
+          l.status
+        ].join(' '));
+
+        if (q && !haystack.includes(q)) return false;
+        if (category && l.category !== category) return false;
+        if (region && l.region_name !== region) return false;
+        if (status && l.status !== status) return false;
+        if (quality && l.lead_quality !== quality) return false;
+
+        return true;
+      });
+
+      renderStats();
+      renderLeads();
+    }
+
+    function renderStats() {
+      $('statTotal').textContent = allLeads.length;
+      $('statA').textContent = allLeads.filter(l => String(l.lead_quality).startsWith('A')).length;
+      $('statPhone').textContent = allLeads.filter(hasPhone).length;
+      $('statInterest').textContent = allLeads.filter(l => ['INTERESSE','TERMIN'].includes(l.status)).length;
+      $('statPartner').textContent = allLeads.filter(l => l.status === 'PARTNER').length;
+      $('statVisible').textContent = filteredLeads.length;
+    }
+
+    function renderLeads() {
+      const list = $('leadList');
+      $('empty').style.display = filteredLeads.length ? 'none' : 'block';
+
+      list.innerHTML = filteredLeads.slice(0, 500).map(renderLead).join('');
+    }
+
+    function renderLead(l) {
+      const qClass = qualityClass(l.lead_quality);
+      const phone = hasPhone(l) ? l.phone : '';
+      const telHref = phone ? `tel:${phone.replace(/\s/g, '')}` : '#';
+      const chainTag = l.chain_hint ? `<span class="tag ${norm(l.chain_hint).includes('kette') ? 'chain' : ''}">${esc(l.chain_hint)}</span>` : '';
+
+      return `
+        <article class="lead" id="lead-${esc(l.place_id)}">
+          <div class="leadTop">
+            <div>
+              <div class="leadName">${esc(l.name)}</div>
+              <div class="meta">
+                <span class="tag ${qClass}">${esc(l.lead_quality || 'Ohne Qualität')}</span>
+                <span class="tag">${esc(l.category || 'Keine Kategorie')}</span>
+                <span class="tag">${esc(l.region_name || 'Keine Region')}</span>
+                ${chainTag}
+                <span class="tag">${esc(l.status || 'NEU')}</span>
+              </div>
+            </div>
+            <div class="score">${esc(l.score)}</div>
+          </div>
+
+          <div class="facts">
+            <div class="fact"><small>Telefon</small><div>${phone ? `<a href="${esc(telHref)}">${esc(phone)}</a>` : 'fehlt'}</div></div>
+            <div class="fact"><small>Adresse</small><div>${esc(l.address || 'fehlt')}</div></div>
+            <div class="fact"><small>Öffnungszeiten</small><div>${esc(l.opening_hours || 'unbekannt')}</div></div>
+            <div class="fact"><small>Website</small><div>${l.website ? `<a target="_blank" href="${esc(l.website)}">öffnen</a>` : 'fehlt'}</div></div>
+            <div class="fact"><small>E-Mail</small><div>${l.email ? `<a href="mailto:${esc(l.email)}">${esc(l.email)}</a>` : 'fehlt'}</div></div>
+            <div class="fact"><small>Angebotsidee</small><div>${esc(l.offer_idea || 'Mitarbeiterrabatt')}</div></div>
+          </div>
+
+          <div class="actions">
+            <a class="btn primary" href="${esc(telHref)}" ${phone ? '' : 'onclick="return false"'}>☎ Anrufen</a>
+            ${l.website ? `<a class="btn blue" target="_blank" href="${esc(l.website)}">Website</a>` : ''}
+            ${l.maps_url ? `<a class="btn" target="_blank" href="${esc(l.maps_url)}">Maps</a>` : ''}
+            ${l.google_search_url ? `<a class="btn" target="_blank" href="${esc(l.google_search_url)}">Google</a>` : ''}
+            ${l.phone_search_url ? `<a class="btn orange" target="_blank" href="${esc(l.phone_search_url)}">Telefon suchen</a>` : ''}
+          </div>
+
+          <div class="statusRow">
+            ${statuses.map(s => `<button class="statusBtn ${l.status === s ? 'active' : ''}" onclick="setStatus('${esc(l.place_id)}','${s}')">${s}</button>`).join('')}
+          </div>
+
+          <div class="miniForm">
+            <input id="appointment-${esc(l.place_id)}" placeholder="Termin, z. B. 2026-05-08 10:00" value="${esc(l.appointment_at || '')}">
+            <input id="offer-${esc(l.place_id)}" placeholder="Partner-Angebot" value="${esc(l.partner_offer || '')}">
+            <textarea id="note-${esc(l.place_id)}" placeholder="Gesprächsnotiz">${esc(l.call_note || l.internal_notes || '')}</textarea>
+            <button class="green" onclick="saveLeadNote('${esc(l.place_id)}')">Notiz speichern</button>
+            <button class="purple" onclick="copyLeadSummary('${esc(l.place_id)}')">Zusammenfassung kopieren</button>
+          </div>
+        </article>
+      `;
+    }
+
+    async function setStatus(placeId, status) {
+      const lead = allLeads.find(l => l.place_id === placeId);
+      if (!lead) return;
+
+      const update = {
+        status,
+        last_contacted_at: new Date().toISOString(),
+        last_contact_result: status,
+        contact_count: Number(lead.contact_count || 0) + 1
+      };
+
+      applyLocalUpdate(placeId, update);
+
+      try {
+        await sendUpdate(placeId, update);
+        showToast('Status gespeichert.');
+      } catch (err) {
+        showToast('Lokal gespeichert. n8n Writeback fehlt noch.');
+      }
+
+      applyFilters();
+    }
+
+    async function saveLeadNote(placeId) {
+      const note = $(`note-${placeId}`)?.value || '';
+      const appointment = $(`appointment-${placeId}`)?.value || '';
+      const offer = $(`offer-${placeId}`)?.value || '';
+
+      const update = {
+        call_note: note,
+        internal_notes: note,
+        appointment_at: appointment,
+        partner_offer: offer,
+        updated_at: new Date().toISOString()
+      };
+
+      applyLocalUpdate(placeId, update);
+
+      try {
+        await sendUpdate(placeId, update);
+        showToast('Notiz gespeichert.');
+      } catch (err) {
+        showToast('Lokal gespeichert. n8n Writeback fehlt noch.');
+      }
+
+      applyFilters();
+    }
+
+    function applyLocalUpdate(placeId, update) {
+      localUpdates[placeId] = {
+        ...(localUpdates[placeId] || {}),
+        ...update
+      };
+      saveLocalUpdates();
+
+      allLeads = allLeads.map(l => l.place_id === placeId ? { ...l, ...update } : l);
+    }
+
+    async function sendUpdate(placeId, update) {
+      const extra = {
+        place_id: placeId,
+        ...update
+      };
+
+      const res = await fetch(buildUrl('updateLead', extra), { method: 'GET' });
+      const data = await res.json();
+
+      if (data.ok === false) {
+        throw new Error(data.error || 'Update fehlgeschlagen');
+      }
+
+      return data;
+    }
+
+    function copyLeadSummary(placeId) {
+      const l = allLeads.find(x => x.place_id === placeId);
+      if (!l) return;
+
+      const text = [
+        `Lead: ${l.name}`,
+        `Kategorie: ${l.category}`,
+        `Region: ${l.region_name}`,
+        `Telefon: ${l.phone || '-'}`,
+        `Website: ${l.website || '-'}`,
+        `Adresse: ${l.address || '-'}`,
+        `Qualität: ${l.lead_quality}`,
+        `Score: ${l.score}`,
+        `Angebotsidee: ${l.offer_idea || '-'}`,
+        `Status: ${l.status}`,
+        `Notiz: ${l.call_note || l.internal_notes || '-'}`
+      ].join('\n');
+
+      navigator.clipboard.writeText(text);
+      showToast('Zusammenfassung kopiert.');
+    }
+
+    function quickFilter(type) {
+      clearFilters(false);
+
+      if (type === 'a') $('qualityFilter').value = [...$('qualityFilter').options].find(o => o.value.startsWith('A'))?.value || '';
+      if (type === 'phone') $('search').value = '+';
+      if (type === 'local') $('search').value = 'LOKAL';
+      if (type === 'website') $('qualityFilter').value = [...$('qualityFilter').options].find(o => o.value.startsWith('B'))?.value || '';
+
+      applyFilters();
+    }
+
+    function clearFilters(render = true) {
+      $('search').value = '';
+      $('categoryFilter').value = '';
+      $('regionFilter').value = '';
+      $('statusFilter').value = '';
+      $('qualityFilter').value = '';
+      if (render) applyFilters();
+    }
+
+    ['search','categoryFilter','regionFilter','statusFilter','qualityFilter'].forEach(id => {
+      window.addEventListener('DOMContentLoaded', () => {
+        $(id).addEventListener('input', applyFilters);
+        $(id).addEventListener('change', applyFilters);
+      });
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setApiPill();
+
+      const s = getSettings();
+      if (!s.apiUrl || !s.token) {
+        $('loading').style.display = 'none';
+        openSettings();
+      } else {
+        loadLeads();
+      }
+    });
+  </script>
+</body>
+</html>
