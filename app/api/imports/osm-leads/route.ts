@@ -10,6 +10,7 @@ import {
 } from "@/lib/crm/import-mapper";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type ImportRequestBody = {
   importRunId?: unknown;
@@ -20,12 +21,12 @@ type ImportRequestBody = {
 export async function POST(request: Request) {
   const auth = verifyImportSecret(request);
   if (!auth.authorized) {
-    return NextResponse.json({ error: "Unauthorized", diagnostics: auth.diagnostics }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized", diagnostics: auth.diagnostics }, { status: 401, headers: noStoreHeaders() });
   }
 
   const body = (await request.json().catch(() => null)) as ImportRequestBody | null;
   if (!body || !Array.isArray(body.leads)) {
-    return NextResponse.json({ error: "Invalid import payload" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid import payload" }, { status: 400, headers: noStoreHeaders() });
   }
 
   const source = typeof body.source === "string" && body.source.trim() ? body.source.trim() : "n8n-osm";
@@ -60,14 +61,17 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json({
-      ok: true,
-      importRunId,
-      leadsFound: body.leads.length,
-      leadsInserted: result.inserted,
-      leadsUpdated: result.updated,
-      leadsSkipped: skipped
-    });
+    return NextResponse.json(
+      {
+        ok: true,
+        importRunId,
+        leadsFound: body.leads.length,
+        leadsInserted: result.inserted,
+        leadsUpdated: result.updated,
+        leadsSkipped: skipped
+      },
+      { headers: noStoreHeaders() }
+    );
   } catch (error) {
     if (importRunId) {
       await updateImportRun(importRunId, {
@@ -78,8 +82,14 @@ export async function POST(request: Request) {
       }).catch(() => undefined);
     }
 
-    return NextResponse.json({ error: safeError(error) }, { status: 500 });
+    return NextResponse.json({ error: safeError(error) }, { status: 500, headers: noStoreHeaders() });
   }
+}
+
+function noStoreHeaders() {
+  return {
+    "Cache-Control": "no-store, no-cache, must-revalidate"
+  };
 }
 
 async function upsertImportedLeads(rows: ImportedLeadRow[]) {

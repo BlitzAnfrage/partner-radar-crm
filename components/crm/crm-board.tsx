@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ExternalLink, Mail, MapPin, Phone, RotateCcw, Search } from "lucide-react";
+import Link from "next/link";
+import { ExternalLink, Mail, MapPin, Phone, RotateCcw, Search, Sparkles } from "lucide-react";
 import type { ChainHint, Lead, LeadPatch, LeadStatus } from "@/types/crm";
 import { chainHintLabels, leadQualities, leadStatuses, statusLabels } from "@/types/crm";
 import { filterAndSortLeads, type SortMode, uniqueValues } from "@/lib/crm/filtering";
@@ -165,8 +166,17 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
 
       {dataMode === "supabase" && leads.length === 0 ? (
         <div className="rounded-[2rem] bg-white p-10 text-center shadow-soft">
-          <div className="text-xl font-semibold tracking-tight text-slate-950">Noch keine Leads in Supabase.</div>
-          <div className="mt-2 text-sm text-slate-500">Importiere Leads über n8n oder seed test data.</div>
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div className="text-xl font-semibold tracking-tight text-slate-950">Noch keine Leads.</div>
+          <div className="mt-2 text-sm text-slate-500">Starte deine erste Lead-Suche.</div>
+          <Link
+            href="/lead-suche"
+            className="mt-6 inline-flex h-11 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
+          >
+            Lead-Suche starten
+          </Link>
         </div>
       ) : null}
 

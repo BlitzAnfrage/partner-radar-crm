@@ -6,6 +6,7 @@ import { listImportRuns } from "@/lib/crm/import-runs";
 import { listLeads } from "@/lib/crm/repository";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function HomePage() {
   const result = await listLeads()

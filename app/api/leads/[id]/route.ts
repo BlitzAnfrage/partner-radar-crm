@@ -4,6 +4,9 @@ import { updateLead } from "@/lib/crm/repository";
 import type { LeadPatch, LeadStatus } from "@/types/crm";
 import { leadStatuses } from "@/types/crm";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const editableKeys = new Set([
   "status",
   "lastContactedAt",
@@ -41,11 +44,17 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ error: "Lead not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ lead });
+    return NextResponse.json({ lead }, { headers: noStoreHeaders() });
   } catch (error) {
     return NextResponse.json(
       { error: toSafeCrmError(error) },
-      { status: isPermissionDeniedError(error) ? 403 : 500 }
+      { status: isPermissionDeniedError(error) ? 403 : 500, headers: noStoreHeaders() }
     );
   }
+}
+
+function noStoreHeaders() {
+  return {
+    "Cache-Control": "no-store, no-cache, must-revalidate"
+  };
 }

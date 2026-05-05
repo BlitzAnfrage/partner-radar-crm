@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Play, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import type { ImportRun } from "@/lib/crm/import-runs";
@@ -12,7 +13,17 @@ type TriggerResponse = {
   importRunId?: string;
 };
 
-export function LeadSearchForm({ configured, importRuns }: { configured: boolean; importRuns: ImportRun[] }) {
+export function LeadSearchForm({
+  configured,
+  webhookUrlPresent,
+  webhookSecretPresent,
+  importRuns
+}: {
+  configured: boolean;
+  webhookUrlPresent: boolean;
+  webhookSecretPresent: boolean;
+  importRuns: ImportRun[];
+}) {
   const [region, setRegion] = useState("Saarbrücken");
   const [categories, setCategories] = useState<string[]>(["Bäckerei", "Café", "Restaurant"]);
   const [quality, setQuality] = useState("A");
@@ -67,7 +78,11 @@ export function LeadSearchForm({ configured, importRuns }: { configured: boolean
     }
 
     const payload = (await response.json().catch(() => ({}))) as TriggerResponse;
-    setMessage(payload.message ?? (response.ok ? "Lead-Suche wurde vorbereitet." : "Lead-Suche konnte nicht gestartet werden."));
+    setMessage(
+      response.ok && payload.configured !== false
+        ? "Suche gestartet. Neue Leads erscheinen nach kurzer Zeit im CRM."
+        : payload.message ?? "Lead-Suche konnte nicht gestartet werden."
+    );
     setLoading(false);
   };
 
@@ -153,7 +168,7 @@ export function LeadSearchForm({ configured, importRuns }: { configured: boolean
           <button
             type="button"
             onClick={startSearch}
-            disabled={loading || categories.length === 0}
+            disabled={!configured || loading || categories.length === 0}
             className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Play className="h-4 w-4" />
@@ -170,8 +185,13 @@ export function LeadSearchForm({ configured, importRuns }: { configured: boolean
         </div>
 
         {message ? (
-          <div className={`mt-5 rounded-2xl p-4 text-sm font-medium ${configured ? "bg-slate-50 text-slate-700" : "bg-amber-50 text-amber-900"}`}>
-            {message}
+          <div className={`mt-5 rounded-2xl p-4 text-sm font-medium ${configured ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`}>
+            <div>{message}</div>
+            {configured && message.startsWith("Suche gestartet") ? (
+              <Link href="/crm" className="mt-3 inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-emerald-800">
+                Zum CRM
+              </Link>
+            ) : null}
           </div>
         ) : null}
       </section>
@@ -181,6 +201,8 @@ export function LeadSearchForm({ configured, importRuns }: { configured: boolean
           <div className="text-sm text-white/45">n8n Status</div>
           <div className="mt-3 text-3xl font-semibold tracking-tight">{configured ? "Bereit" : "Offen"}</div>
           <div className="mt-8 space-y-3 text-sm text-white/65">
+            <div className="rounded-2xl bg-white/10 p-4">Webhook URL: {webhookUrlPresent ? "vorhanden" : "fehlt"}</div>
+            <div className="rounded-2xl bg-white/10 p-4">Webhook Secret: {webhookSecretPresent ? "vorhanden" : "fehlt"}</div>
             <div className="rounded-2xl bg-white/10 p-4">Region: {region}</div>
             <div className="rounded-2xl bg-white/10 p-4">{categories.length} Kategorien</div>
             <div className="rounded-2xl bg-white/10 p-4">{testMode ? "Testmodus aktiv" : "Live-Suche vorbereitet"}</div>

@@ -4,6 +4,7 @@ import { listImportRuns } from "@/lib/crm/import-runs";
 import { getN8nStatus } from "@/lib/n8n/trigger";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function LeadSearchPage() {
   const n8nStatus = getN8nStatus();
@@ -12,7 +13,12 @@ export default async function LeadSearchPage() {
   return (
     <div>
       <PageHeader title="Lead-Suche" eyebrow="n8n" />
-      <LeadSearchForm configured={n8nStatus.configured} importRuns={importRuns} />
+      <LeadSearchForm
+        configured={n8nStatus.configured}
+        webhookUrlPresent={n8nStatus.webhookUrlPresent}
+        webhookSecretPresent={n8nStatus.webhookSecretPresent}
+        importRuns={importRuns}
+      />
     </div>
   );
 }

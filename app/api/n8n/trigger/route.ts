@@ -3,6 +3,7 @@ import { createImportRun, updateImportRun } from "@/lib/crm/import-runs";
 import { getN8nStatus } from "@/lib/n8n/trigger";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type TriggerBody = {
   searchConfig?: {

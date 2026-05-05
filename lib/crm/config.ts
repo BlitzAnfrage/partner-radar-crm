@@ -1,4 +1,8 @@
 export function getDataMode() {
+  if (process.env.NODE_ENV === "production") {
+    return "supabase";
+  }
+
   return process.env.CRM_DATA_MODE === "supabase" ? "supabase" : "mock";
 }
 

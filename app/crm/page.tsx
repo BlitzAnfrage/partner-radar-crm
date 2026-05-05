@@ -5,6 +5,7 @@ import { toSafeCrmError } from "@/lib/crm/errors";
 import { listLeads } from "@/lib/crm/repository";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function CrmPage({
   searchParams
