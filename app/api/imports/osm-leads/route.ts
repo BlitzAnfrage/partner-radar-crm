@@ -4,7 +4,6 @@ import { createImportRun, updateImportRun } from "@/lib/crm/import-runs";
 import { verifyImportSecret } from "@/lib/imports/import-secret";
 import {
   mapIncomingOsmLeads,
-  toExistingLeadUpdate,
   type ImportedLeadRow,
   type IncomingOsmLead
 } from "@/lib/crm/import-mapper";
@@ -52,12 +51,14 @@ export async function POST(request: Request) {
       status: "SUCCESS",
       leads_found: body.leads.length,
       leads_inserted: result.inserted,
-      leads_updated: result.updated,
+      leads_updated: 0,
       finished_at: new Date().toISOString(),
       error_message: null,
       metadata: {
         source,
-        skipped
+        skipped,
+        skipped_existing_count: result.skippedExisting,
+        failed_count: skipped
       }
     });
 
@@ -65,10 +66,10 @@ export async function POST(request: Request) {
       {
         ok: true,
         importRunId,
-        leadsFound: body.leads.length,
-        leadsInserted: result.inserted,
-        leadsUpdated: result.updated,
-        leadsSkipped: skipped
+        inserted_count: result.inserted,
+        skipped_existing_count: result.skippedExisting,
+        failed_count: skipped,
+        total_received: body.leads.length
       },
       { headers: noStoreHeaders() }
     );
@@ -94,7 +95,7 @@ function noStoreHeaders() {
 
 async function upsertImportedLeads(rows: ImportedLeadRow[]) {
   if (rows.length === 0) {
-    return { inserted: 0, updated: 0 };
+    return { inserted: 0, skippedExisting: 0 };
   }
 
   const supabase = createSupabaseServerClient();
@@ -110,7 +111,6 @@ async function upsertImportedLeads(rows: ImportedLeadRow[]) {
 
   const existingSourceIds = new Set((existing ?? []).map((row) => row.source_id as string));
   const newRows = rows.filter((row) => !existingSourceIds.has(row.source_id));
-  const existingRows = rows.filter((row) => existingSourceIds.has(row.source_id));
 
   if (newRows.length > 0) {
     const { error } = await supabase.from("leads").upsert(newRows, {
@@ -123,18 +123,9 @@ async function upsertImportedLeads(rows: ImportedLeadRow[]) {
     }
   }
 
-  await Promise.all(
-    existingRows.map(async (row) => {
-      const { error } = await supabase.from("leads").update(toExistingLeadUpdate(row)).eq("source_id", row.source_id);
-      if (error) {
-        throw new Error(`Could not update imported lead: ${error.message}`);
-      }
-    })
-  );
-
   return {
     inserted: newRows.length,
-    updated: existingRows.length
+    skippedExisting: rows.length - newRows.length
   };
 }
 

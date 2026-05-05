@@ -409,6 +409,15 @@ function LeadCard({
 
       {editing ? (
         <div className="mt-4 grid gap-3">
+          {(lead.contactPerson || lead.decisionMakerRole || lead.impressumUrl || lead.contactPageUrl || lead.extractedEmails.length || lead.extractedPhones.length) ? (
+            <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
+              {lead.contactPerson ? <div>Ansprechpartner: {lead.contactPerson}{lead.decisionMakerRole ? ` · ${lead.decisionMakerRole}` : ""}</div> : null}
+              {lead.impressumUrl ? <a href={lead.impressumUrl} target="_blank" rel="noreferrer" className="block font-medium text-slate-900">Impressum öffnen</a> : null}
+              {lead.contactPageUrl ? <a href={lead.contactPageUrl} target="_blank" rel="noreferrer" className="block font-medium text-slate-900">Kontaktseite öffnen</a> : null}
+              {lead.extractedEmails.length ? <div>Weitere E-Mails: {lead.extractedEmails.slice(0, 2).join(", ")}</div> : null}
+              {lead.extractedPhones.length ? <div>Weitere Telefone: {lead.extractedPhones.slice(0, 2).join(", ")}</div> : null}
+            </div>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-2">
             <select
               value={draftStatus}

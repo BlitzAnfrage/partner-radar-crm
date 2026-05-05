@@ -52,6 +52,11 @@ const mk = (
     appointmentAt: status === "APPOINTMENT" ? "2026-05-09T14:00" : null,
     appointmentNote: "",
     internalNotes: "",
+    impressumUrl: "",
+    contactPageUrl: "",
+    extractedEmails: [],
+    extractedPhones: [],
+    decisionMakerRole: "",
     createdAt: now,
     updatedAt: now
   };

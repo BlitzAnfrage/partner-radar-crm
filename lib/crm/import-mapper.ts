@@ -19,7 +19,21 @@ export type IncomingOsmLead = Record<string, unknown> & {
   google_search_url?: unknown;
   phone_search_url?: unknown;
   contact_person?: unknown;
+  decision_maker_name?: unknown;
+  decision_maker_role?: unknown;
+  decision_maker_phone?: unknown;
+  decision_maker_email?: unknown;
   opening_hours?: unknown;
+  impressum_url?: unknown;
+  contact_page_url?: unknown;
+  extracted_emails?: unknown;
+  extracted_phones?: unknown;
+  google_rating?: unknown;
+  google_review_count?: unknown;
+  google_maps_url?: unknown;
+  business_status?: unknown;
+  enrichment_source?: unknown;
+  enrichment_notes?: unknown;
   lat?: unknown;
   lon?: unknown;
   score?: unknown;
@@ -47,6 +61,8 @@ export type ImportedLeadRow = {
   google_search_url: string | null;
   phone_search_url: string | null;
   contact_person: string | null;
+  decision_maker_phone: string | null;
+  decision_maker_email: string | null;
   opening_hours: string | null;
   lat: number | null;
   lon: number | null;
@@ -88,13 +104,15 @@ export function mapIncomingOsmLeads(leads: IncomingOsmLead[], importRunId: strin
       category_group: cleanText(lead.category_group),
       category: cleanText(lead.category),
       address: cleanText(lead.address),
-      phone: normalizePhone(lead.phone),
-      emails: normalizeEmails(lead.email, lead.emails),
+      phone: normalizePhone(lead.phone) ?? firstExtractedPhone(lead.extracted_phones),
+      emails: normalizeEmails(lead.email, lead.emails, lead.extracted_emails, lead.decision_maker_email),
       website: cleanText(lead.website),
-      maps_url: cleanText(lead.maps_url),
+      maps_url: cleanText(lead.maps_url) ?? cleanText(lead.google_maps_url),
       google_search_url: cleanText(lead.google_search_url),
       phone_search_url: cleanText(lead.phone_search_url),
-      contact_person: cleanText(lead.contact_person),
+      contact_person: cleanText(lead.contact_person) ?? cleanText(lead.decision_maker_name),
+      decision_maker_phone: normalizePhone(lead.decision_maker_phone),
+      decision_maker_email: cleanText(lead.decision_maker_email),
       opening_hours: cleanText(lead.opening_hours),
       lat: parseCoordinate(lead.lat),
       lon: parseCoordinate(lead.lon),
@@ -103,7 +121,22 @@ export function mapIncomingOsmLeads(leads: IncomingOsmLead[], importRunId: strin
       lead_quality_label: cleanText(lead.lead_quality_label) ?? cleanText(lead.lead_quality),
       chain_hint: normalizeChainHint(lead.chain_hint),
       status: normalizeStatus(lead.status),
-      raw_payload: lead
+      raw_payload: {
+        ...lead,
+        enrichment: {
+          impressum_url: cleanText(lead.impressum_url),
+          contact_page_url: cleanText(lead.contact_page_url),
+          extracted_emails: normalizeTextArray(lead.extracted_emails),
+          extracted_phones: normalizeTextArray(lead.extracted_phones),
+          google_rating: lead.google_rating ?? null,
+          google_review_count: lead.google_review_count ?? null,
+          business_status: cleanText(lead.business_status),
+          decision_maker_name: cleanText(lead.decision_maker_name),
+          decision_maker_role: cleanText(lead.decision_maker_role),
+          enrichment_source: cleanText(lead.enrichment_source),
+          enrichment_notes: cleanText(lead.enrichment_notes)
+        }
+      }
     });
   }
 
@@ -125,6 +158,8 @@ export function toExistingLeadUpdate(row: ImportedLeadRow) {
     google_search_url: row.google_search_url,
     phone_search_url: row.phone_search_url,
     contact_person: row.contact_person,
+    decision_maker_phone: row.decision_maker_phone,
+    decision_maker_email: row.decision_maker_email,
     opening_hours: row.opening_hours,
     lat: row.lat,
     lon: row.lon,
@@ -157,19 +192,31 @@ function normalizePhone(value: unknown) {
   return phone.startsWith("'") ? phone.slice(1) : phone;
 }
 
-function normalizeEmails(email: unknown, emails: unknown) {
+function normalizeEmails(...sources: unknown[]) {
   const values = new Set<string>();
   const add = (value: unknown) => {
     const text = cleanText(value);
     if (text) values.add(text);
   };
 
-  add(email);
-  if (Array.isArray(emails)) {
-    emails.forEach(add);
+  for (const source of sources) {
+    if (Array.isArray(source)) {
+      source.forEach(add);
+    } else {
+      add(source);
+    }
   }
 
   return Array.from(values);
+}
+
+function normalizeTextArray(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.map(cleanText).filter((item): item is string => Boolean(item));
+}
+
+function firstExtractedPhone(value: unknown) {
+  return normalizeTextArray(value).map(normalizePhone).find(Boolean) ?? null;
 }
 
 function parseCoordinate(value: unknown) {

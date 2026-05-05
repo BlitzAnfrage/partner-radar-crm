@@ -62,6 +62,8 @@ export type SupabaseLeadUpdate = Partial<
 >;
 
 export function mapSupabaseLead(row: SupabaseLeadRow): Lead {
+  const enrichment = getEnrichment(row.raw_payload);
+
   return {
     id: row.id,
     sourceId: row.source_id ?? "",
@@ -94,6 +96,11 @@ export function mapSupabaseLead(row: SupabaseLeadRow): Lead {
     appointmentAt: row.appointment_at,
     appointmentNote: row.appointment_note ?? "",
     internalNotes: row.internal_notes ?? "",
+    impressumUrl: enrichment.impressum_url,
+    contactPageUrl: enrichment.contact_page_url,
+    extractedEmails: enrichment.extracted_emails,
+    extractedPhones: enrichment.extracted_phones,
+    decisionMakerRole: enrichment.decision_maker_role,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -132,5 +139,24 @@ export function mapLeadToSupabaseInsert(lead: Lead): SupabaseLeadInsert {
     appointment_note: lead.appointmentNote || null,
     internal_notes: lead.internalNotes || null,
     raw_payload: {}
+  };
+}
+
+function getEnrichment(rawPayload: Record<string, unknown> | null) {
+  const enrichment =
+    rawPayload && typeof rawPayload.enrichment === "object" && rawPayload.enrichment
+      ? (rawPayload.enrichment as Record<string, unknown>)
+      : {};
+
+  return {
+    impressum_url: typeof enrichment.impressum_url === "string" ? enrichment.impressum_url : "",
+    contact_page_url: typeof enrichment.contact_page_url === "string" ? enrichment.contact_page_url : "",
+    extracted_emails: Array.isArray(enrichment.extracted_emails)
+      ? enrichment.extracted_emails.filter((item): item is string => typeof item === "string")
+      : [],
+    extracted_phones: Array.isArray(enrichment.extracted_phones)
+      ? enrichment.extracted_phones.filter((item): item is string => typeof item === "string")
+      : [],
+    decision_maker_role: typeof enrichment.decision_maker_role === "string" ? enrichment.decision_maker_role : ""
   };
 }

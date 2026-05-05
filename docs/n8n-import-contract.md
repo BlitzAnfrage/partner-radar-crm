@@ -28,12 +28,28 @@ Die Route ist durch den CRM-Login geschützt. Wenn n8n vollständig konfiguriert
   "secretHeaderName": "x-crm-import-secret",
   "searchConfig": {
     "region": "Saarbrücken",
-    "categories": ["Bäckerei", "Café"],
-    "quality": "A",
-    "maxLeads": 50,
+    "regionGroup": "saarland",
+    "country": "DE",
+    "categories": [
+      {
+        "id": "baeckerei",
+        "label": "Bäckerei",
+        "group": "Essen & Trinken",
+        "osmTags": [{ "key": "shop", "value": "bakery" }],
+        "priority": 1
+      }
+    ],
+    "maxLeadsPerRun": 30,
+    "maxJobsPerRun": 3,
+    "onlyHighQuality": true,
+    "onlyWithPhone": true,
+    "enableWebsiteLookup": true,
+    "enableImpressumLookup": true,
     "excludeChains": true,
-    "phoneOnly": false,
-    "testMode": true
+    "phoneOnly": true,
+    "testMode": true,
+    "freeMode": true,
+    "duplicateMode": "ignore_existing"
   }
 }
 ```
@@ -43,6 +59,28 @@ Die Route ist durch den CRM-Login geschützt. Wenn n8n vollständig konfiguriert
 ```http
 x-crm-import-secret: <N8N_WEBHOOK_SECRET>
 ```
+
+## Branchenbibliothek
+
+Die CRM-App verwaltet die Branchen zentral in `lib/crm/categories.ts`. Jede Kategorie enthält:
+
+- `id`, `label`, `group` und kurze Beschreibung.
+- passende OSM-Tags als `{ key, value }`.
+- Priorität und Empfehlung für Kaltakquise.
+- Presets wie `Gastro lokal`, `Handwerk & Auto`, `Beauty & Gesundheit`, `Einzelhandel` und `Top Kaltakquise`.
+
+n8n sollte die übergebene Kategorie-Liste direkt verwenden und daraus limit-schonende Overpass-Abfragen bauen. Mehrere OSM-Tags pro Kategorie sind möglich.
+
+## Limits
+
+Für den kostenlosen Modus empfiehlt die App:
+
+- 3 bis 5 Suchjobs pro Lauf.
+- 30 bis 50 Leads pro Lauf.
+- Testmodus zuerst aktiv lassen.
+- Bestehende Leads möglichst schon im Workflow auslassen.
+
+Mehr Suchjobs dauern länger und belasten Overpass stärker. Die CRM-App schützt zusätzlich serverseitig vor Duplikaten.
 
 ## n8n sendet Leads zurück
 
@@ -83,6 +121,20 @@ Secrets dürfen nicht in sichtbare Logs, Screenshots, Debug-Ausgaben oder Payloa
       "email": "info@example.test",
       "emails": ["kontakt@example.test"],
       "website": "https://example.test",
+      "impressum_url": "https://example.test/impressum",
+      "contact_page_url": "https://example.test/kontakt",
+      "extracted_emails": ["chef@example.test"],
+      "extracted_phones": ["+49681123457"],
+      "decision_maker_name": "Max Beispiel",
+      "decision_maker_role": "Geschäftsführer",
+      "decision_maker_phone": "+49681123458",
+      "decision_maker_email": "max@example.test",
+      "google_rating": 4.6,
+      "google_review_count": 128,
+      "google_maps_url": "https://maps.google.com/?q=...",
+      "business_status": "OPERATIONAL",
+      "enrichment_source": "website-impressum",
+      "enrichment_notes": "Telefon aus Kontaktseite gefunden",
       "lat": "49,2311746",
       "lon": "6,9969327",
       "score": 88,
@@ -108,10 +160,28 @@ Secrets dürfen nicht in sichtbare Logs, Screenshots, Debug-Ausgaben oder Payloa
 - `chain_hint`: `LOKAL / UNKLAR` wird `LOCAL`, `KETTE / FILIALE` wird `CHAIN`, `BRANCH` bleibt `BRANCH`.
 - `status`: `NEU` wird `NEW`; englische CRM-Status werden akzeptiert.
 - `raw_payload`: enthält das originale eingehende Lead-Objekt.
+- `contact_person`: nutzt `contact_person`, sonst `decision_maker_name`.
+- `decision_maker_phone` und `decision_maker_email`: werden in vorhandene Spalten geschrieben.
+- `maps_url`: nutzt `maps_url`, sonst `google_maps_url`.
+- `impressum_url`, `contact_page_url`, Google-Daten, extrahierte E-Mails/Telefone und Anreicherungsnotizen landen in `raw_payload.enrichment`.
+
+## Bewertung
+
+- A-Lead: Telefonnummer vorhanden, lokal oder relevant, passende Kategorie, Adresse oder Website vorhanden, hoher Score.
+- B-Lead: Telefonnummer vorhanden, aber weniger Zusatzinfos, oder Website vorhanden und Kontakt realistisch auffindbar.
+- C-Lead: existiert wahrscheinlich, aber ohne Telefonnummer und eher später prüfen.
+- D-Lead: Kette/Filiale, wenig Daten oder unklare Relevanz.
+
+Die Anrufliste ist standardmäßig auf A/B Leads mit Telefonnummer ausgelegt. Leads ohne Telefonnummer sollten nur importiert werden, wenn n8n über Website, Impressum oder Google eine realistische Kontaktmöglichkeit findet oder die Suche bewusst lockerer eingestellt wurde.
 
 ## Bestehende Leads
 
-Bei bekannten `source_id`s aktualisiert die App nur Anreicherungsfelder wie Adresse, Website, Kategorie, Score oder Koordinaten. CRM-Workflow-Felder wie Status, Notizen, Termine, E-Mail-Entwürfe und Kontaktzähler werden nicht überschrieben.
+`duplicateMode` steht auf `ignore_existing`. n8n sollte bestehende Leads möglichst nicht erneut senden. Zusätzlich prüft die Next.js Import-API `source_id`s serverseitig:
+
+- Neue `source_id`s werden eingefügt.
+- Bereits bekannte `source_id`s werden übersprungen.
+- Bestehende CRM-Daten, Status, Notizen, Termine und Kontaktzähler werden nicht überschrieben.
+- Die API antwortet mit `inserted_count`, `skipped_existing_count`, `failed_count` und `total_received`.
 
 ## Health Check
 

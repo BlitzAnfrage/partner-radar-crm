@@ -8,14 +8,24 @@ export const revalidate = 0;
 type TriggerBody = {
   searchConfig?: {
     region?: unknown;
+    regionGroup?: unknown;
+    country?: unknown;
     categories?: unknown;
     qualities?: unknown;
     quality?: unknown;
+    maxLeadsPerRun?: unknown;
+    maxJobsPerRun?: unknown;
     maxLeads?: unknown;
     maxSearchJobs?: unknown;
+    onlyHighQuality?: unknown;
+    onlyWithPhone?: unknown;
+    enableWebsiteLookup?: unknown;
+    enableImpressumLookup?: unknown;
     excludeChains?: unknown;
     phoneOnly?: unknown;
     testMode?: unknown;
+    freeMode?: unknown;
+    duplicateMode?: unknown;
   };
   search?: TriggerBody["searchConfig"];
 };
@@ -104,11 +114,13 @@ export async function POST(request: Request) {
 
 function normalizeSearchConfig(searchConfig: TriggerBody["searchConfig"]) {
   const categories = Array.isArray(searchConfig?.categories)
-    ? searchConfig.categories.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    ? searchConfig.categories.filter((item) => typeof item === "object" && item !== null)
     : [];
-  const maxLeads = typeof searchConfig?.maxLeads === "number" ? searchConfig.maxLeads : Number(searchConfig?.maxLeads ?? 50);
+  const rawMaxLeads = searchConfig?.maxLeadsPerRun ?? searchConfig?.maxLeads;
+  const rawMaxJobs = searchConfig?.maxJobsPerRun ?? searchConfig?.maxSearchJobs;
+  const maxLeads = typeof rawMaxLeads === "number" ? rawMaxLeads : Number(rawMaxLeads ?? 30);
   const maxSearchJobs =
-    typeof searchConfig?.maxSearchJobs === "number" ? searchConfig.maxSearchJobs : Number(searchConfig?.maxSearchJobs ?? 3);
+    typeof rawMaxJobs === "number" ? rawMaxJobs : Number(rawMaxJobs ?? 3);
   const qualities = Array.isArray(searchConfig?.qualities)
     ? searchConfig.qualities.filter((item): item is string => typeof item === "string" && ["A", "B", "C", "D"].includes(item))
     : typeof searchConfig?.quality === "string" && ["A", "B", "C", "D"].includes(searchConfig.quality)
@@ -117,14 +129,22 @@ function normalizeSearchConfig(searchConfig: TriggerBody["searchConfig"]) {
 
   return {
     region: typeof searchConfig?.region === "string" && searchConfig.region.trim() ? searchConfig.region.trim() : "Saarbrücken",
+    regionGroup: typeof searchConfig?.regionGroup === "string" ? searchConfig.regionGroup : "saarland",
+    country: typeof searchConfig?.country === "string" ? searchConfig.country : "DE",
     categories,
     qualities,
     quality: qualities[0] ?? "A",
-    maxLeads: Number.isFinite(maxLeads) ? Math.max(1, Math.min(500, Math.round(maxLeads))) : 50,
-    maxSearchJobs: Number.isFinite(maxSearchJobs) ? Math.max(1, Math.min(20, Math.round(maxSearchJobs))) : 3,
+    maxLeadsPerRun: Number.isFinite(maxLeads) ? Math.max(1, Math.min(500, Math.round(maxLeads))) : 30,
+    maxJobsPerRun: Number.isFinite(maxSearchJobs) ? Math.max(1, Math.min(20, Math.round(maxSearchJobs))) : 3,
+    onlyHighQuality: searchConfig?.onlyHighQuality !== false,
+    onlyWithPhone: searchConfig?.onlyWithPhone !== false && searchConfig?.phoneOnly !== false,
+    enableWebsiteLookup: searchConfig?.enableWebsiteLookup !== false,
+    enableImpressumLookup: searchConfig?.enableImpressumLookup !== false,
     excludeChains: Boolean(searchConfig?.excludeChains),
-    phoneOnly: Boolean(searchConfig?.phoneOnly),
-    testMode: searchConfig?.testMode !== false
+    phoneOnly: searchConfig?.phoneOnly !== false,
+    testMode: searchConfig?.testMode !== false,
+    freeMode: searchConfig?.freeMode !== false,
+    duplicateMode: "ignore_existing"
   };
 }
 

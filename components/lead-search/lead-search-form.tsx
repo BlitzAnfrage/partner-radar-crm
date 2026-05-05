@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Play, RotateCcw } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ImportRun } from "@/lib/crm/import-runs";
-import { leadSearchCategories, leadSearchQualities, leadSearchRegions } from "@/lib/lead-search/options";
+import { categoryPresets, categoryRegistry, type CategoryDefinition } from "@/lib/crm/categories";
+import { defaultLeadSearchCategoryIds, leadSearchRegions } from "@/lib/lead-search/options";
 
 type TriggerResponse = {
   ok?: boolean;
@@ -25,7 +26,8 @@ export function LeadSearchForm({
   importRuns: ImportRun[];
 }) {
   const [region, setRegion] = useState("Saarbrücken");
-  const [categories, setCategories] = useState<string[]>(["Bäckerei", "Café", "Restaurant"]);
+  const [categoryIds, setCategoryIds] = useState<string[]>(defaultLeadSearchCategoryIds);
+  const [categorySearch, setCategorySearch] = useState("");
   const [qualities, setQualities] = useState<string[]>(["A", "B"]);
   const [maxLeads, setMaxLeads] = useState(30);
   const [maxSearchJobs, setMaxSearchJobs] = useState(3);
@@ -35,16 +37,27 @@ export function LeadSearchForm({
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const runningImport = importRuns.some((run) => run.status === "RUNNING");
+  const activeBlockingImport = importRuns.some((run) => run.status === "RUNNING" && !isStaleRunning(run));
+  const selectedCategories = categoryRegistry.filter((category) => categoryIds.includes(category.id));
+  const filteredCategories = useMemo(() => {
+    const term = categorySearch.trim().toLowerCase();
+    return categoryRegistry.filter((category) =>
+      [category.label, category.group, category.description].join(" ").toLowerCase().includes(term)
+    );
+  }, [categorySearch]);
+  const groupedCategories = useMemo(() => groupCategories(filteredCategories), [filteredCategories]);
+  const estimatedSeconds = maxSearchJobs * 10;
 
-  const toggleCategory = (category: string) => {
-    setCategories((current) =>
-      current.includes(category) ? current.filter((item) => item !== category) : [...current, category]
+  const toggleCategory = (categoryId: string) => {
+    setCategoryIds((current) =>
+      current.includes(categoryId) ? current.filter((item) => item !== categoryId) : [...current, categoryId]
     );
   };
 
   const reset = () => {
     setRegion("Saarbrücken");
-    setCategories(["Bäckerei", "Café", "Restaurant"]);
+    setCategoryIds(defaultLeadSearchCategoryIds);
+    setCategorySearch("");
     setQualities(["A", "B"]);
     setMaxLeads(30);
     setMaxSearchJobs(3);
@@ -70,13 +83,21 @@ export function LeadSearchForm({
       body: JSON.stringify({
         searchConfig: {
           region,
-          categories,
+          regionGroup: "saarland",
+          country: "DE",
+          categories: selectedCategories.map(toSearchCategory),
           qualities,
-          maxLeads,
-          maxSearchJobs,
+          maxLeadsPerRun: maxLeads,
+          maxJobsPerRun: maxSearchJobs,
+          onlyHighQuality: true,
+          onlyWithPhone: phoneOnly,
+          enableWebsiteLookup: true,
+          enableImpressumLookup: true,
           excludeChains,
           phoneOnly,
-          testMode
+          testMode,
+          freeMode: true,
+          duplicateMode: "ignore_existing"
         }
       })
     }).catch(() => null);
@@ -124,16 +145,16 @@ export function LeadSearchForm({
           <div>
             <span className="mb-2 block text-sm font-medium text-slate-500">Qualität</span>
             <div className="flex h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3">
-              {leadSearchQualities.map((item) => (
+            {["A", "B", "C", "D"].map((quality) => (
                 <button
-                  key={item.value}
+                  key={quality}
                   type="button"
-                  onClick={() => toggleQuality(item.value)}
+                  onClick={() => toggleQuality(quality)}
                   className={`rounded-full px-3 py-1.5 text-sm font-semibold transition ${
-                    qualities.includes(item.value) ? "bg-slate-950 text-white" : "bg-white text-slate-600"
+                    qualities.includes(quality) ? "bg-slate-950 text-white" : "bg-white text-slate-600"
                   }`}
                 >
-                  {item.label}
+                  {quality}
                 </button>
               ))}
             </div>
@@ -172,36 +193,66 @@ export function LeadSearchForm({
         </div>
 
         <div className="mt-6">
-          <div className="mb-3 text-sm font-medium text-slate-500">Kategorien</div>
-          <div className="flex flex-wrap gap-2">
-            {leadSearchCategories.map((category) => {
-              const active = categories.includes(category);
-              return (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => toggleCategory(category)}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                    active ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  {category}
-                </button>
-              );
-            })}
+          <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm font-medium text-slate-500">Kategorien</div>
+            <input
+              value={categorySearch}
+              onChange={(event) => setCategorySearch(event.target.value)}
+              placeholder="Kategorie suchen"
+              className="h-10 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-slate-400"
+            />
+          </div>
+          <div className="mb-3 flex flex-wrap gap-2">
+            {categoryPresets.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => setCategoryIds(preset.categoryIds)}
+                className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+          <div className="max-h-80 space-y-4 overflow-auto rounded-2xl border border-slate-100 bg-slate-50 p-3">
+            {Object.entries(groupedCategories).map(([group, categories]) => (
+              <div key={group}>
+                <div className="mb-2 text-xs font-semibold uppercase text-slate-400">{group}</div>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((category) => {
+                    const active = categoryIds.includes(category.id);
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => toggleCategory(category.id)}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                          active ? "bg-slate-950 text-white" : "bg-white text-slate-700 hover:bg-slate-100"
+                        }`}
+                      >
+                        {category.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="mt-5 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-          Aktiv: {qualities.join("/")} Leads · {phoneOnly ? "nur mit Telefonnummer" : "Telefon optional"} ·{" "}
-          {excludeChains ? "keine Ketten" : "Ketten erlaubt"} · max. {maxLeads} Leads · {maxSearchJobs} Suchjobs
+          Aktiv: {qualities.join("/")} Leads · {selectedCategories.length} Kategorien · {phoneOnly ? "nur mit Telefonnummer" : "Telefon optional"} ·{" "}
+          {excludeChains ? "keine Ketten" : "Ketten erlaubt"} · ca. {estimatedSeconds}s
+        </div>
+        <div className="mt-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          Empfohlen im kostenlosen Modus: 3 bis 5 Suchjobs und 30 bis 50 Leads. Mehr Suchjobs dauern länger und können Overpass stärker belasten.
         </div>
 
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
             onClick={startSearch}
-            disabled={!configured || loading || categories.length === 0 || qualities.length === 0}
+            disabled={!configured || activeBlockingImport || loading || selectedCategories.length === 0 || qualities.length === 0}
             className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Play className="h-4 w-4" />
@@ -242,7 +293,7 @@ export function LeadSearchForm({
             <div className="rounded-2xl bg-white/10 p-4">Webhook URL: {webhookUrlPresent ? "vorhanden" : "fehlt"}</div>
             <div className="rounded-2xl bg-white/10 p-4">Webhook Secret: {webhookSecretPresent ? "vorhanden" : "fehlt"}</div>
             <div className="rounded-2xl bg-white/10 p-4">Region: {region}</div>
-            <div className="rounded-2xl bg-white/10 p-4">{categories.length} Kategorien · {qualities.join("/") || "keine Qualität"}</div>
+            <div className="rounded-2xl bg-white/10 p-4">{selectedCategories.length} Kategorien · {qualities.join("/") || "keine Qualität"}</div>
             <div className="rounded-2xl bg-white/10 p-4">{maxLeads} Leads · {maxSearchJobs} Suchjobs</div>
             <div className="rounded-2xl bg-white/10 p-4">{testMode ? "Testmodus aktiv" : "Live-Suche vorbereitet"}</div>
           </div>
@@ -252,7 +303,7 @@ export function LeadSearchForm({
           <div className="mb-4 text-lg font-semibold tracking-tight text-slate-950">Letzte Importläufe</div>
           {runningImport ? (
             <div className="mb-3 rounded-2xl bg-blue-50 p-4 text-sm font-medium text-blue-800">
-              Import läuft oder wartet auf n8n-Antwort.
+              {activeBlockingImport ? "Es läuft bereits eine Suche." : "Ein alter Import läuft noch. Wahrscheinlich hängen geblieben."}
             </div>
           ) : null}
           <div className="space-y-3">
@@ -263,6 +314,7 @@ export function LeadSearchForm({
                     <div className="truncate text-sm font-semibold text-slate-900">{run.source}</div>
                     <div className="text-xs text-slate-500">
                       {run.leads_found} gefunden · {run.leads_inserted} neu · {run.leads_updated} aktualisiert
+                      {getSkippedExisting(run) ? ` · ${getSkippedExisting(run)} übersprungen` : ""}
                     </div>
                     {run.error_message ? <div className="mt-1 truncate text-xs text-red-600">{run.error_message}</div> : null}
                     <div className="mt-1 text-xs text-slate-400">
@@ -283,6 +335,23 @@ export function LeadSearchForm({
   );
 }
 
+function groupCategories(categories: CategoryDefinition[]) {
+  return categories.reduce<Record<string, CategoryDefinition[]>>((groups, category) => {
+    groups[category.group] = [...(groups[category.group] ?? []), category];
+    return groups;
+  }, {});
+}
+
+function toSearchCategory(category: CategoryDefinition) {
+  return {
+    id: category.id,
+    label: category.label,
+    group: category.group,
+    osmTags: category.osmTags,
+    priority: category.priority
+  };
+}
+
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("de-DE", {
     day: "2-digit",
@@ -294,6 +363,11 @@ function formatDate(value: string) {
 
 function isStaleRunning(run: ImportRun) {
   return run.status === "RUNNING" && Date.now() - new Date(run.created_at).getTime() > 15 * 60 * 1000;
+}
+
+function getSkippedExisting(run: ImportRun) {
+  const value = run.metadata?.skipped_existing_count;
+  return typeof value === "number" ? value : 0;
 }
 
 function StatusBadge({ status }: { status: ImportRun["status"] }) {

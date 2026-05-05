@@ -45,6 +45,11 @@ export type Lead = {
   appointmentAt: string | null;
   appointmentNote: string;
   internalNotes: string;
+  impressumUrl: string;
+  contactPageUrl: string;
+  extractedEmails: string[];
+  extractedPhones: string[];
+  decisionMakerRole: string;
   createdAt: string;
   updatedAt: string;
 };

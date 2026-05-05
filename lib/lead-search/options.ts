@@ -1,3 +1,5 @@
+import { categoryRegistry } from "@/lib/crm/categories";
+
 export const leadSearchRegions = [
   "Saarbrücken",
   "Saarlouis",
@@ -10,22 +12,12 @@ export const leadSearchRegions = [
   "Dillingen"
 ];
 
-export const leadSearchCategories = [
-  "Bäckerei",
-  "Café",
-  "Restaurant",
-  "Fitnessstudio",
-  "Friseur",
-  "Autowäsche",
-  "Werkstatt",
-  "Metzgerei",
-  "Eisdiele",
-  "Fahrradladen"
+export const leadSearchRegionGroups = [
+  { id: "saarland", label: "Saarland", country: "DE", regions: leadSearchRegions },
+  { id: "germany", label: "Deutschland später", country: "DE", regions: [] }
 ];
 
-export const leadSearchQualities = [
-  { value: "A", label: "A-Leads" },
-  { value: "B", label: "B-Leads" },
-  { value: "C", label: "C-Leads" },
-  { value: "D", label: "D-Leads" }
-];
+export const defaultLeadSearchCategoryIds = categoryRegistry
+  .filter((category) => category.defaultEnabled)
+  .slice(0, 3)
+  .map((category) => category.id);
