@@ -39,6 +39,7 @@ export function CallingMode({ initialLeads, loadError }: { initialLeads: Lead[];
   const [activeMail, setActiveMail] = useState<Lead | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [note, setNote] = useState("");
+  const [noteStampInserted, setNoteStampInserted] = useState(false);
   const [appointmentAt, setAppointmentAt] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [message, setMessage] = useState("");
@@ -53,11 +54,12 @@ export function CallingMode({ initialLeads, loadError }: { initialLeads: Lead[];
 
   useEffect(() => {
     setDetailsOpen(false);
-    setNote("");
+    setNote(currentLead?.callNote ?? "");
+    setNoteStampInserted(false);
     setAppointmentAt("");
     setSaveState("idle");
     setMessage("");
-  }, [currentLead?.id]);
+  }, [currentLead]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -150,6 +152,44 @@ export function CallingMode({ initialLeads, loadError }: { initialLeads: Lead[];
     window.setTimeout(() => setSaveState("idle"), 1400);
   };
 
+  const ensureNoteTimestamp = () => {
+    if (noteStampInserted) return;
+    const stamp = `[${formatNoteTimestamp(new Date())}]`;
+    setNote((currentNote) => {
+      const trimmed = currentNote.trim();
+      if (!trimmed) return `${stamp}\n`;
+      if (trimmed.endsWith(stamp)) return currentNote;
+      return `${currentNote.trimEnd()}\n\n${stamp}\n`;
+    });
+    setNoteStampInserted(true);
+  };
+
+  const saveNote = async () => {
+    if (!currentLead) return;
+    setSaveState("saving");
+    setMessage("");
+
+    const response = await fetch(`/api/leads/${currentLead.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        callNote: note,
+        updatedAt: new Date().toISOString()
+      })
+    }).catch(() => null);
+
+    if (!response?.ok) {
+      const payload = await response?.json().catch(() => null);
+      setSaveState("error");
+      setMessage(payload?.error ?? "Notiz konnte nicht gespeichert werden.");
+      return;
+    }
+
+    setSaveState("saved");
+    setMessage("Notiz gespeichert.");
+    window.setTimeout(() => setSaveState("idle"), 1600);
+  };
+
   if (loadError) {
     return (
       <StateCard
@@ -178,15 +218,15 @@ export function CallingMode({ initialLeads, loadError }: { initialLeads: Lead[];
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="mb-5 grid gap-3 md:grid-cols-5">
-        <Metric label="Lead" value={`${currentIndex}/${total}`} />
-        <Metric label="Bearbeitet" value={stats.handled} />
-        <Metric label="Interessiert" value={stats.interested} />
-        <Metric label="Nicht erreicht" value={stats.notReached} />
+      <div className="mb-5 grid gap-3 md:grid-cols-4">
+        <Metric label="Aktueller Lead" value={`${currentIndex}/${total}`} />
         <Metric label="Verbleibend" value={queue.length} />
+        <Metric label="Heute bearbeitet" value={stats.handled} />
+        <Metric label="Später" value={stats.postponed} />
       </div>
 
-      <article className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-soft sm:p-8">
+      <article className="overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-soft">
+        <div className="border-b border-slate-100 bg-gradient-to-b from-white to-slate-50/80 p-5 sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="mb-3 flex flex-wrap gap-2">
@@ -194,20 +234,23 @@ export function CallingMode({ initialLeads, loadError }: { initialLeads: Lead[];
               <StatusPill tone="neutral">Score {currentLead.score}</StatusPill>
               <StatusPill tone={currentLead.chainHint === "LOCAL" ? "success" : "neutral"}>{chainHintLabels[currentLead.chainHint]}</StatusPill>
             </div>
-            <h2 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{currentLead.companyName}</h2>
+            <h2 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-5xl">{currentLead.companyName}</h2>
             <div className="mt-3 flex flex-wrap gap-2 text-sm font-medium text-slate-500">
               <span>{currentLead.category || "Kategorie offen"}</span>
               <span>·</span>
               <span>{currentLead.regionName || "Region offen"}</span>
             </div>
           </div>
-          <div className="rounded-[1.5rem] bg-slate-950 px-5 py-4 text-white">
+          <div className="rounded-[1.5rem] bg-slate-950 px-5 py-4 text-white shadow-sm">
             <div className="text-xs font-semibold uppercase text-white/45">Telefon</div>
-            <div className="mt-1 text-2xl font-semibold tracking-tight">{currentLead.phone || "Fehlt"}</div>
+            <div className="mt-1 text-3xl font-semibold tracking-tight">{currentLead.phone || "Fehlt"}</div>
           </div>
         </div>
+        </div>
 
-        <div className="mt-7 grid gap-3 lg:grid-cols-2">
+        <div className="grid gap-6 p-5 sm:p-8 xl:grid-cols-[1fr_0.8fr]">
+          <div>
+        <div className="grid gap-3 lg:grid-cols-2">
           <InfoLine label="E-Mail" value={currentLead.emails[0] || "Fehlt"} />
           <InfoLine label="Website" value={currentLead.website || "Fehlt"} />
           <InfoLine label="Adresse" value={currentLead.address || "Offen"} />
@@ -244,15 +287,6 @@ export function CallingMode({ initialLeads, loadError }: { initialLeads: Lead[];
               {currentLead.impressumUrl ? <QuickLink href={currentLead.impressumUrl} label="Impressum" icon={<ExternalLink className="h-4 w-4" />} /> : null}
               {currentLead.contactPageUrl ? <QuickLink href={currentLead.contactPageUrl} label="Kontaktseite" icon={<ExternalLink className="h-4 w-4" />} /> : null}
               <label>
-                <span className="mb-2 block text-sm font-medium text-slate-500">Notiz</span>
-                <textarea
-                  value={note}
-                  onChange={(event) => setNote(event.target.value)}
-                  rows={3}
-                  className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
-                />
-              </label>
-              <label>
                 <span className="mb-2 block text-sm font-medium text-slate-500">Termin</span>
                 <input
                   type="datetime-local"
@@ -264,11 +298,34 @@ export function CallingMode({ initialLeads, loadError }: { initialLeads: Lead[];
             </div>
           ) : null}
         </div>
+          </div>
 
-        <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <ActionButton label="Interessiert" onClick={() => saveDecision("INTERESTED")} icon={<ThumbsUp />} disabled={saveState === "saving"} tone="dark" />
+          <aside className="rounded-[1.5rem] border border-slate-100 bg-slate-50 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-slate-950">Notiz</div>
+                <div className="text-xs text-slate-500">Wird mit Statusaktionen gespeichert.</div>
+              </div>
+              <button type="button" onClick={saveNote} disabled={saveState === "saving"} className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 disabled:opacity-50">
+                Notiz speichern
+              </button>
+            </div>
+            <textarea
+              value={note}
+              onFocus={ensureNoteTimestamp}
+              onChange={(event) => setNote(event.target.value)}
+              rows={7}
+              placeholder="Kurze Gesprächsnotiz..."
+              className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-slate-400"
+            />
+          </aside>
+        </div>
+
+        <div className="border-t border-slate-100 bg-white p-5 sm:p-8">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <ActionButton label="Interessiert" onClick={() => saveDecision("INTERESTED")} icon={<ThumbsUp />} disabled={saveState === "saving"} tone="positive" />
           <ActionButton label="Nicht erreicht" onClick={() => saveDecision("NOT_REACHED")} icon={<Phone />} disabled={saveState === "saving"} />
-          <ActionButton label="Termin" onClick={() => saveDecision("APPOINTMENT")} icon={<CalendarClock />} disabled={saveState === "saving"} />
+          <ActionButton label="Termin" onClick={() => saveDecision("APPOINTMENT")} icon={<CalendarClock />} disabled={saveState === "saving"} tone="positive" />
           <ActionButton label="Absage" onClick={() => saveDecision("REJECTED")} icon={<Ban />} disabled={saveState === "saving"} />
           <ActionButton label="Nicht passend" onClick={() => saveDecision("NOT_FIT")} icon={<ShieldX />} disabled={saveState === "saving"} />
         </div>
@@ -298,6 +355,7 @@ export function CallingMode({ initialLeads, loadError }: { initialLeads: Lead[];
             {saveState === "error" ? <span className="text-red-700">{message}</span> : null}
             {saveState === "idle" && message ? <span className="text-slate-500">{message}</span> : null}
           </div>
+        </div>
         </div>
       </article>
 
@@ -341,19 +399,36 @@ function ActionButton({
   icon: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
-  tone?: "dark" | "light";
+  tone?: "dark" | "light" | "positive";
 }) {
+  const className =
+    tone === "positive"
+      ? "btn-positive disabled:cursor-not-allowed disabled:opacity-50"
+      : tone === "dark"
+        ? "btn-dark disabled:cursor-not-allowed disabled:opacity-50"
+        : "btn-light disabled:cursor-not-allowed disabled:opacity-50";
+
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={tone === "dark" ? "btn-dark disabled:cursor-not-allowed disabled:opacity-50" : "btn-light disabled:cursor-not-allowed disabled:opacity-50"}
+      className={className}
     >
       <span className="[&>svg]:h-4 [&>svg]:w-4">{icon}</span>
       {label}
     </button>
   );
+}
+
+function formatNoteTimestamp(date: Date) {
+  return new Intl.DateTimeFormat("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
 }
 
 function QuickLink({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {

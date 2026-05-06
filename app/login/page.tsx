@@ -13,9 +13,9 @@ export default function LoginPage({
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f5f5f7] px-4 py-10">
-      <section className="w-full max-w-md rounded-[2rem] bg-white p-8 shadow-soft">
+      <section className="w-full max-w-md rounded-[2rem] border border-slate-100 bg-white/95 p-8 shadow-soft backdrop-blur">
         <div className="mb-8">
-          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
+          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-sm">
             <LockKeyhole className="h-5 w-5" />
           </div>
           <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Partner Radar CRM</h1>
@@ -35,14 +35,14 @@ export default function LoginPage({
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-slate-400"
+                className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
                 autoFocus
               />
             </label>
             {hasError ? <div className="text-sm font-medium text-red-600">Passwort stimmt nicht.</div> : null}
             <button
               type="submit"
-              className="h-12 w-full rounded-2xl bg-slate-950 text-sm font-semibold text-white transition hover:bg-slate-800"
+              className="h-12 w-full rounded-2xl bg-slate-950 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-px hover:bg-slate-800"
             >
               Einloggen
             </button>

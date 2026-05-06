@@ -147,7 +147,7 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
     <>
       <CrmStats leads={leads} />
 
-      <div className="mb-5 rounded-[2rem] border border-slate-100 bg-white p-4 shadow-soft">
+      <div className="sticky top-[5.25rem] z-10 mb-5 rounded-[2rem] border border-slate-100 bg-white/90 p-4 shadow-soft backdrop-blur lg:top-4">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <div className="text-sm font-semibold text-slate-950">Leads filtern</div>
@@ -236,6 +236,14 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
           >
             Lead-Suche starten
           </Link>
+        </div>
+      ) : null}
+
+      {leads.length > 0 && visibleLeads.length === 0 ? (
+        <div className="rounded-[2rem] border border-slate-100 bg-white p-10 text-center shadow-soft">
+          <div className="text-xl font-semibold tracking-tight text-slate-950">Keine Treffer.</div>
+          <div className="mt-2 text-sm text-slate-500">Passe die Filter an oder setze sie zurück.</div>
+          <button type="button" onClick={clearFilters} className="btn-dark mt-6">Filter zurücksetzen</button>
         </div>
       ) : null}
 
