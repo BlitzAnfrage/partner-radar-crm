@@ -13,10 +13,12 @@
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.95), transparent 34rem),
-    linear-gradient(180deg, #f7f7f9 0%, #f2f3f6 100%);
+    radial-gradient(circle at 18% -10%, rgba(255, 255, 255, 0.95), transparent 30rem),
+    radial-gradient(circle at 88% 8%, rgba(226, 232, 240, 0.55), transparent 24rem),
+    linear-gradient(180deg, #f8f8fa 0%, #f1f3f6 100%);
   color: #111827;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-rendering: geometricPrecision;
 }
 
 a {
@@ -50,14 +52,22 @@ button {
 
 @layer components {
   .btn-dark {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-px hover:bg-slate-800;
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-px hover:bg-slate-800 active:translate-y-0;
   }
 
   .btn-light {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-px hover:bg-slate-50;
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-800 shadow-sm transition duration-200 hover:-translate-y-px hover:border-slate-300 hover:bg-slate-50 active:translate-y-0;
   }
 
   .btn-positive {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 text-sm font-semibold text-emerald-800 shadow-sm transition hover:-translate-y-px hover:bg-emerald-100;
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 text-sm font-semibold text-emerald-800 shadow-sm transition duration-200 hover:-translate-y-px hover:bg-emerald-100 active:translate-y-0;
+  }
+
+  .card-premium {
+    @apply rounded-[1.5rem] border border-slate-200/70 bg-white/90 shadow-soft backdrop-blur;
+  }
+
+  .input-premium {
+    @apply rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-slate-400 focus:bg-white;
   }
 }

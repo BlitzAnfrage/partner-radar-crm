@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import type { ImportRun } from "@/lib/crm/import-runs";
 import { categoryPresets, categoryRegistry, type CategoryDefinition } from "@/lib/crm/categories";
 import { defaultLeadSearchCategoryIds, leadSearchRegions } from "@/lib/lead-search/options";
+import { StatusPill } from "@/components/ui/status-pill";
 
 type TriggerResponse = {
   ok?: boolean;
@@ -132,16 +133,13 @@ export function LeadSearchForm({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-soft sm:p-7">
+      <section className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-5 shadow-premium sm:p-7">
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <div className="text-2xl font-semibold tracking-tight text-slate-950">Kontrollierte Lead-Suche</div>
-            <div className="mt-2 text-sm text-slate-500">A/B Leads, Telefon, lokale Betriebe. Ruhig starten, sauber importieren.</div>
+            <div className="text-3xl font-semibold tracking-tight text-slate-950">Suchauftrag konfigurieren</div>
+            <div className="mt-2 text-sm text-slate-500">Region, Branchen, Qualität, Limits.</div>
           </div>
-          <div className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
-            <span className={`h-2 w-2 rounded-full ${configured ? "bg-emerald-500" : "bg-amber-500"}`} />
-            n8n {configured ? "bereit" : "offen"} · URL {webhookUrlPresent ? "ok" : "fehlt"} · Secret {webhookSecretPresent ? "ok" : "fehlt"}
-          </div>
+          <StatusPill tone={configured ? "success" : "warning"}>n8n {configured ? "bereit" : "offen"} · URL {webhookUrlPresent ? "ok" : "fehlt"} · Secret {webhookSecretPresent ? "ok" : "fehlt"}</StatusPill>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
@@ -150,7 +148,7 @@ export function LeadSearchForm({
             <select
               value={region}
               onChange={(event) => setRegion(event.target.value)}
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
+              className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-slate-400"
             >
               {leadSearchRegions.map((item) => (
                 <option key={item} value={item}>
@@ -165,7 +163,7 @@ export function LeadSearchForm({
             <button
               type="button"
               onClick={() => setCategoriesOpen((current) => !current)}
-              className="flex h-12 w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-left text-sm outline-none transition hover:bg-white focus:border-slate-400 focus:bg-white"
+              className="flex h-12 w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm outline-none transition hover:border-slate-300 focus:border-slate-400"
               aria-expanded={categoriesOpen}
             >
               <span className="min-w-0 truncate font-medium text-slate-800">
@@ -174,7 +172,7 @@ export function LeadSearchForm({
               <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
             </button>
             {categoriesOpen ? (
-              <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-soft">
+              <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-premium">
                 <div className="border-b border-slate-100 p-3">
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
@@ -202,7 +200,7 @@ export function LeadSearchForm({
                     const selectedCount = groupIds.filter((id) => categoryIds.includes(id)).length;
                     const allSelected = selectedCount === groupIds.length;
                     return (
-                      <div key={group} className="rounded-2xl bg-slate-50 p-3">
+                      <div key={group} className="rounded-2xl border border-slate-200/70 bg-slate-50 p-3">
                         <button
                           type="button"
                           onClick={() => toggleGroup(categories)}
@@ -243,7 +241,7 @@ export function LeadSearchForm({
               key={preset.id}
               type="button"
               onClick={() => setCategoryIds(preset.categoryIds)}
-              className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-px hover:bg-slate-50"
             >
               {preset.label}
             </button>
@@ -256,7 +254,7 @@ export function LeadSearchForm({
                 key={category.id}
                 type="button"
                 onClick={() => toggleCategory(category.id)}
-                className="inline-flex items-center gap-1 rounded-full bg-slate-950 px-3 py-1.5 text-xs font-semibold text-white"
+                className="inline-flex items-center gap-1 rounded-full bg-slate-950 px-3 py-1.5 text-xs font-semibold text-white shadow-sm"
               >
                 {category.label}
                 <X className="h-3 w-3" />
@@ -273,7 +271,7 @@ export function LeadSearchForm({
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div>
             <span className="mb-2 block text-sm font-medium text-slate-500">Qualität</span>
-            <div className="flex h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3">
+            <div className="flex h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3">
               {["A", "B", "C", "D"].map((quality) => (
                 <button
                   key={quality}
@@ -290,7 +288,7 @@ export function LeadSearchForm({
           </div>
           <NumberField label="max. Leads" value={maxLeads} min={1} max={500} onChange={setMaxLeads} />
           <NumberField label="max. Suchjobs" value={maxSearchJobs} min={1} max={20} onChange={setMaxSearchJobs} />
-          <div className="rounded-2xl bg-slate-50 p-4">
+          <div className="rounded-2xl border border-slate-200/70 bg-slate-50 p-4">
             <div className="mb-3 text-sm font-semibold text-slate-900">Modus</div>
             <div className="space-y-2">
               <Toggle label="Ketten ausschließen" checked={excludeChains} onChange={setExcludeChains} />
@@ -301,16 +299,16 @@ export function LeadSearchForm({
         </div>
 
         <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            Kostenloser Modus: 3-5 Suchjobs, 30-50 Leads. Aktuell ca. {estimatedSeconds}s.{" "}
-            {activeBlockingImport ? "Es läuft bereits eine Suche." : "Mehr Suchjobs brauchen länger."}
+          <div className="rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            Free Mode · {maxSearchJobs} Jobs · {maxLeads} Leads · ca. {estimatedSeconds}s
+            {activeBlockingImport ? " · Suche läuft" : ""}
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
               onClick={startSearch}
               disabled={!configured || activeBlockingImport || loading || selectedCategories.length === 0 || qualities.length === 0}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn-dark h-12 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Play className="h-4 w-4" />
               {loading ? "Startet..." : "Lead-Suche starten"}
@@ -318,7 +316,7 @@ export function LeadSearchForm({
             <button
               type="button"
               onClick={reset}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-100 px-5 text-sm font-semibold text-slate-800 transition hover:bg-slate-200"
+              className="btn-light h-12"
             >
               <RotateCcw className="h-4 w-4" />
               Zurücksetzen
@@ -327,11 +325,11 @@ export function LeadSearchForm({
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
-          <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-emerald-800">{qualities.join("/") || "keine"} Leads</span>
-          <span className="rounded-full bg-slate-100 px-3 py-1.5">{selectedCategories.length} Kategorien</span>
-          <span className="rounded-full bg-slate-100 px-3 py-1.5">{phoneOnly ? "Telefon Pflicht" : "Telefon optional"}</span>
-          <span className="rounded-full bg-slate-100 px-3 py-1.5">{excludeChains ? "ohne Ketten" : "Ketten erlaubt"}</span>
-          <span className="rounded-full bg-slate-100 px-3 py-1.5">{testMode ? "Testmodus" : "Live-Modus"}</span>
+          <StatusPill tone="success">{qualities.join("/") || "keine"} Leads</StatusPill>
+          <StatusPill>{selectedCategories.length} Kategorien</StatusPill>
+          <StatusPill>{phoneOnly ? "Telefon Pflicht" : "Telefon optional"}</StatusPill>
+          <StatusPill>{excludeChains ? "ohne Ketten" : "Ketten erlaubt"}</StatusPill>
+          <StatusPill>{testMode ? "Testmodus" : "Live-Modus"}</StatusPill>
         </div>
 
         {message ? (
@@ -351,7 +349,7 @@ export function LeadSearchForm({
         ) : null}
       </section>
 
-      <section className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-soft sm:p-6">
+      <section className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-5 shadow-soft sm:p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div className="text-lg font-semibold tracking-tight text-slate-950">Letzte Importläufe</div>
           {runningImport ? (

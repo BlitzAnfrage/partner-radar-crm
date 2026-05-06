@@ -1,6 +1,7 @@
 import { Database, KeyRound, Lock, ServerCog, ShieldCheck, Workflow } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { N8nImportCard } from "@/components/settings/n8n-import-card";
+import { StatusPill } from "@/components/ui/status-pill";
 import { getPublicConfigStatus } from "@/lib/crm/config";
 import { listImportRuns } from "@/lib/crm/import-runs";
 
@@ -43,7 +44,7 @@ export default async function SettingsPage() {
 
 function StatusSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-[1.5rem] border border-slate-100 bg-white p-5 shadow-soft">
+    <section className="rounded-[1.5rem] border border-slate-200/70 bg-white/90 p-5 shadow-soft">
       <div className="mb-4 text-lg font-semibold tracking-tight text-slate-950">{title}</div>
       <div className="space-y-3">{children}</div>
     </section>
@@ -62,7 +63,7 @@ function StatusRow({
   ok: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3">
       <div className="flex min-w-0 items-center gap-3">
         <span className="rounded-xl bg-white p-2 text-slate-600 shadow-sm [&>svg]:h-4 [&>svg]:w-4">{icon}</span>
         <div className="min-w-0">
@@ -70,9 +71,7 @@ function StatusRow({
           <div className="truncate text-base font-semibold tracking-tight text-slate-950">{value}</div>
         </div>
       </div>
-      <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${ok ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
-          {ok ? "bereit" : "offen"}
-      </span>
+      <StatusPill tone={ok ? "success" : "warning"}>{ok ? "bereit" : "offen"}</StatusPill>
     </div>
   );
 }

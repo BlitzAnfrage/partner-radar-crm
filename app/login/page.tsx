@@ -12,13 +12,13 @@ export default function LoginPage({
   const next = typeof searchParams.next === "string" ? searchParams.next : "/";
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f5f5f7] px-4 py-10">
-      <section className="w-full max-w-md rounded-[2rem] border border-slate-100 bg-white/95 p-8 shadow-soft backdrop-blur">
+    <main className="flex min-h-screen items-center justify-center px-4 py-10">
+      <section className="w-full max-w-md rounded-[2rem] border border-slate-200/70 bg-white/95 p-8 shadow-premium backdrop-blur">
         <div className="mb-8">
-          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-sm">
+          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-premium">
             <LockKeyhole className="h-5 w-5" />
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Partner Radar CRM</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Partner Radar</h1>
           <p className="mt-2 text-sm text-slate-500">Privater Zugang</p>
         </div>
 
@@ -35,7 +35,7 @@ export default function LoginPage({
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
+              className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-slate-400"
                 autoFocus
               />
             </label>

@@ -1,6 +1,8 @@
 import { DashboardGrid } from "@/components/dashboard/dashboard-grid";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatusPill } from "@/components/ui/status-pill";
+import { MetricCard } from "@/components/ui/metric-card";
+import { SectionCard } from "@/components/ui/section-card";
 import Link from "next/link";
 import { getDataMode } from "@/lib/crm/config";
 import { toSafeCrmError } from "@/lib/crm/errors";
@@ -34,7 +36,7 @@ export default async function HomePage() {
     <div>
       <PageHeader
         title="Partner Radar CRM"
-        eyebrow="Home"
+        eyebrow="Akquise Cockpit"
         action={
           <div className="flex flex-wrap gap-2">
             <QuickLink href="/crm">CRM öffnen</QuickLink>
@@ -48,14 +50,13 @@ export default async function HomePage() {
           {result.error}
         </div>
       ) : null}
-      <DashboardGrid leads={leads} />
-      <div className="mt-6 grid gap-4 xl:grid-cols-[1fr_0.72fr_0.72fr]">
-        <section className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-soft">
+      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.72fr]">
+        <section className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-6 shadow-premium">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="text-sm font-medium text-slate-500">Heute anrufen</div>
-              <div className="mt-3 text-5xl font-semibold tracking-tight text-slate-950">{callTodayCount}</div>
-              <div className="mt-2 text-sm text-slate-500">Neue Leads mit Telefonnummer</div>
+              <div className="text-sm font-semibold text-slate-500">Nächster bester Schritt</div>
+              <div className="mt-3 text-7xl font-semibold tracking-tight text-slate-950">{callTodayCount}</div>
+              <div className="mt-2 text-sm text-slate-500">anrufbare Leads in der Queue</div>
             </div>
             <StatusPill tone={callTodayCount ? "success" : "neutral"}>{callTodayCount ? "bereit" : "leer"}</StatusPill>
           </div>
@@ -69,18 +70,15 @@ export default async function HomePage() {
             CRM öffnen
           </Link>
         </section>
-        <section className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-soft">
-          <div className="text-sm font-medium text-slate-500">Neue Leads</div>
-          <div className="mt-3 text-4xl font-semibold tracking-tight text-slate-950">{newLeadsCount}</div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <StatusPill tone="neutral">Datenmodus: {dataMode}</StatusPill>
-            <StatusPill tone={leads.length ? "success" : "warning"}>{leads.length} gesamt</StatusPill>
+        <section className="rounded-[2rem] bg-[#0b0d12] p-6 text-white shadow-premium">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-sm text-white/45">Letzter Import</div>
+              <div className="mt-3 text-4xl font-semibold tracking-tight">{latestImport?.status ?? "Keiner"}</div>
+            </div>
+            <StatusPill tone={latestImport?.status === "SUCCESS" ? "success" : "neutral"}>{dataMode}</StatusPill>
           </div>
-        </section>
-        <section className="rounded-[2rem] bg-[#0d0f14] p-6 text-white shadow-soft">
-          <div className="text-sm text-white/45">Letzter Import</div>
-          <div className="mt-3 text-3xl font-semibold tracking-tight">{latestImport?.status ?? "Keiner"}</div>
-          <div className="mt-5 rounded-2xl bg-white/10 p-4 text-sm text-white/65">
+          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/65">
             {latestImport
               ? `${latestImport.leads_inserted} neu · ${latestImport.leads_updated} aktualisiert`
               : "Import-Bridge ist vorbereitet."}
@@ -88,14 +86,15 @@ export default async function HomePage() {
         </section>
       </div>
 
-      <section className="mt-4 rounded-[2rem] border border-slate-100 bg-white p-6 shadow-soft">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">Top Regionen</h2>
-          <Link href="/crm" className="text-sm font-semibold text-slate-500 transition hover:text-slate-950">Alle Leads</Link>
-        </div>
+      <div className="mt-4">
+        <DashboardGrid leads={leads} />
+      </div>
+
+      <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_0.7fr]">
+      <SectionCard title="Top Regionen" action={<Link href="/crm" className="text-sm font-semibold text-slate-500 transition hover:text-slate-950">Alle Leads</Link>}>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           {topRegions.length ? topRegions.map((item) => (
-            <Link key={item.region} href={`/crm?region=${encodeURIComponent(item.region)}`} className="rounded-2xl bg-slate-50 px-4 py-3 transition hover:bg-slate-100">
+            <Link key={item.region} href={`/crm?region=${encodeURIComponent(item.region)}`} className="rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 transition hover:-translate-y-px hover:bg-white hover:shadow-soft">
               <div className="truncate font-medium text-slate-800">{item.region}</div>
               <div className="mt-1 text-sm text-slate-500">{item.count} Leads</div>
             </Link>
@@ -103,7 +102,9 @@ export default async function HomePage() {
             <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">Noch keine Regionen.</div>
           )}
         </div>
-      </section>
+      </SectionCard>
+      <MetricCard label="Neue Leads" value={newLeadsCount} detail={`${leads.length} Leads gesamt`} />
+      </div>
     </div>
   );
 }
@@ -112,7 +113,7 @@ function QuickLink({ href, children }: { href: string; children: React.ReactNode
   return (
     <Link
       href={href}
-      className="inline-flex h-10 items-center justify-center rounded-2xl bg-white px-4 text-sm font-semibold text-slate-700 shadow-soft transition hover:bg-slate-50"
+      className="inline-flex h-10 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/90 px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-px hover:bg-white"
     >
       {children}
     </Link>

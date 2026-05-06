@@ -9,6 +9,8 @@ import { filterAndSortLeads, type SortMode, uniqueValues } from "@/lib/crm/filte
 import { mergeLocalLeadEdits, saveLocalLeadEdit } from "@/lib/crm/local-persistence";
 import { CallModal } from "@/components/modals/call-modal";
 import { MailModal } from "@/components/modals/mail-modal";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusPill } from "@/components/ui/status-pill";
 
 type Props = {
   initialLeads: Lead[];
@@ -147,7 +149,7 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
     <>
       <CrmStats leads={leads} />
 
-      <div className="sticky top-[5.25rem] z-10 mb-5 rounded-[2rem] border border-slate-100 bg-white/90 p-4 shadow-soft backdrop-blur lg:top-4">
+      <div className="sticky top-[5.25rem] z-10 mb-5 rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-4 shadow-premium backdrop-blur lg:top-4">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <div className="text-sm font-semibold text-slate-950">Leads filtern</div>
@@ -156,7 +158,7 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
           <div className="flex flex-wrap gap-2">
             <Link
               href="/anrufmodus"
-              className="inline-flex h-10 items-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800"
+              className="btn-dark h-10 px-4"
             >
               <PhoneCall className="h-4 w-4" />
               Anrufmodus starten
@@ -164,7 +166,7 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
             <button
               type="button"
               onClick={clearFilters}
-              className="inline-flex h-10 items-center gap-2 rounded-2xl bg-slate-100 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+              className="btn-light h-10 px-4"
             >
               <RotateCcw className="h-4 w-4" />
               Zurücksetzen
@@ -178,7 +180,7 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Suche"
-              className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
+              className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none transition focus:border-slate-400"
             />
           </label>
           <Select value={region} onChange={setRegion} options={regions} placeholder="Region" />
@@ -224,27 +226,15 @@ export function CrmBoard({ initialLeads, initialFilters, dataMode, loadError }: 
       ) : null}
 
       {dataMode === "supabase" && leads.length === 0 ? (
-        <div className="rounded-[2rem] bg-white p-10 text-center shadow-soft">
-          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <div className="text-xl font-semibold tracking-tight text-slate-950">Noch keine Leads.</div>
-          <div className="mt-2 text-sm text-slate-500">Starte deine erste Lead-Suche.</div>
-          <Link
-            href="/lead-suche"
-            className="mt-6 inline-flex h-11 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
-          >
-            Lead-Suche starten
-          </Link>
-        </div>
+        <EmptyState
+          title="Noch keine Leads."
+          text="Starte deine erste Lead-Suche."
+          actions={<Link href="/lead-suche" className="btn-dark"><Sparkles className="h-4 w-4" />Lead-Suche starten</Link>}
+        />
       ) : null}
 
       {leads.length > 0 && visibleLeads.length === 0 ? (
-        <div className="rounded-[2rem] border border-slate-100 bg-white p-10 text-center shadow-soft">
-          <div className="text-xl font-semibold tracking-tight text-slate-950">Keine Treffer.</div>
-          <div className="mt-2 text-sm text-slate-500">Passe die Filter an oder setze sie zurück.</div>
-          <button type="button" onClick={clearFilters} className="btn-dark mt-6">Filter zurücksetzen</button>
-        </div>
+        <EmptyState title="Keine Treffer." text="Passe die Filter an oder setze sie zurück." actions={<button type="button" onClick={clearFilters} className="btn-dark">Filter zurücksetzen</button>} />
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
@@ -279,7 +269,7 @@ function CrmStats({ leads }: { leads: Lead[] }) {
   return (
     <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-7">
       {stats.map((stat) => (
-        <div key={stat.label} className="rounded-2xl bg-white px-4 py-3 shadow-soft">
+        <div key={stat.label} className="rounded-2xl border border-slate-200/70 bg-white/85 px-4 py-3 shadow-sm">
           <div className="text-2xl font-semibold tracking-tight text-slate-950">{stat.value}</div>
           <div className="mt-1 text-xs font-medium text-slate-500">{stat.label}</div>
         </div>
@@ -372,7 +362,7 @@ function LeadCard({
   };
 
   return (
-    <article className="rounded-[1.5rem] border border-slate-100 bg-white p-4 shadow-soft sm:p-5">
+    <article className="group rounded-[1.5rem] border border-slate-200/70 bg-white/90 p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-soft sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="truncate text-lg font-semibold tracking-tight text-slate-950">{lead.companyName}</h2>
@@ -381,14 +371,14 @@ function LeadCard({
             <span className="truncate">{lead.address || "Adresse offen"}</span>
           </div>
         </div>
-        <div className="shrink-0 rounded-full bg-slate-950 px-3 py-1.5 text-sm font-semibold text-white">{lead.leadQuality || "-"}</div>
+        <StatusPill tone={lead.leadQuality === "A" ? "dark" : lead.leadQuality === "B" ? "success" : "neutral"}>{lead.leadQuality || "-"}</StatusPill>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
-        <span className="rounded-full bg-slate-100 px-3 py-1.5 text-slate-700">{lead.category || "Kategorie offen"}</span>
-        <span className="rounded-full bg-slate-100 px-3 py-1.5 text-slate-700">{lead.regionName || "Region offen"}</span>
-        <span className="rounded-full bg-slate-100 px-3 py-1.5 text-slate-700">{chainHintLabels[lead.chainHint]}</span>
-        <span className="rounded-full bg-slate-950 px-3 py-1.5 text-white">{statusLabels[lead.status]}</span>
+        <StatusPill>{lead.category || "Kategorie offen"}</StatusPill>
+        <StatusPill>{lead.regionName || "Region offen"}</StatusPill>
+        <StatusPill>{chainHintLabels[lead.chainHint]}</StatusPill>
+        <StatusPill tone="dark">{statusLabels[lead.status]}</StatusPill>
       </div>
 
       <div className="mt-4 grid gap-2 text-sm">
@@ -403,13 +393,13 @@ function LeadCard({
 
       <div className="mt-4 flex flex-wrap gap-2">
         {lead.phone ? (
-          <button onClick={() => onCall(lead)} className="inline-flex items-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
+          <button onClick={() => onCall(lead)} className="btn-dark h-10 rounded-full px-4">
             <Phone className="mr-1.5 inline h-3.5 w-3.5" />
             Anrufen
           </button>
         ) : null}
         {lead.emails.length ? (
-          <button onClick={() => onMail(lead)} className="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-200">
+          <button onClick={() => onMail(lead)} className="btn-light h-10 rounded-full px-4">
             <Mail className="mr-1.5 inline h-3.5 w-3.5" />
             Mail senden
           </button>
@@ -424,7 +414,7 @@ function LeadCard({
         <button
           type="button"
           onClick={openEditor}
-          className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-200"
+          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
         >
           Bearbeiten / Notiz
         </button>
@@ -470,7 +460,7 @@ function LeadCard({
           <button
             onClick={save}
             disabled={saveState === "saving"}
-            className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="btn-dark h-10 rounded-full px-4 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saveState === "saving" ? "Speichert..." : "Speichern"}
           </button>
@@ -517,7 +507,7 @@ function QuickLink({ href, label, icon }: { href: string; label: string; icon: R
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-800"
+      className="inline-flex h-10 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50"
     >
       {icon}
       {label}

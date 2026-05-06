@@ -20,6 +20,7 @@ import { chainHintLabels, statusLabels } from "@/types/crm";
 import { buildCallQueue } from "@/lib/crm/call-queue";
 import { CallModal } from "@/components/modals/call-modal";
 import { MailModal } from "@/components/modals/mail-modal";
+import { EmptyState } from "@/components/ui/empty-state";
 import { StatusPill } from "@/components/ui/status-pill";
 
 type SessionStats = {
@@ -192,25 +193,20 @@ export function CallingMode({ initialLeads, loadError }: { initialLeads: Lead[];
 
   if (loadError) {
     return (
-      <StateCard
-        title="Leads konnten nicht geladen werden."
-        text={loadError}
-        actions={<button type="button" onClick={() => window.location.reload()} className="btn-dark">Erneut versuchen</button>}
-      />
+      <EmptyState title="Leads konnten nicht geladen werden." text={loadError} actions={<button type="button" onClick={() => window.location.reload()} className="btn-dark">Erneut versuchen</button>} />
     );
   }
 
   if (!currentLead) {
     return (
-      <StateCard
-        title="Keine anrufbaren Leads."
+      <EmptyState
+        title="Keine anrufbaren Leads"
         text="Keine neuen Leads mit Telefonnummer in der Queue."
         actions={
-          <div className="flex flex-wrap justify-center gap-3">
+          <>
             <Link href="/lead-suche" className="btn-dark">Lead-Suche starten</Link>
             <Link href="/crm" className="btn-light">CRM öffnen</Link>
-            <Link href="/crm?phone=present" className="btn-light">Filter lockern</Link>
-          </div>
+          </>
         }
       />
     );
@@ -219,14 +215,14 @@ export function CallingMode({ initialLeads, loadError }: { initialLeads: Lead[];
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-5 grid gap-3 md:grid-cols-4">
-        <Metric label="Aktueller Lead" value={`${currentIndex}/${total}`} />
+        <Metric label="Aktueller Lead" value={`${currentIndex}/${total}`} active />
         <Metric label="Verbleibend" value={queue.length} />
         <Metric label="Heute bearbeitet" value={stats.handled} />
         <Metric label="Später" value={stats.postponed} />
       </div>
 
-      <article className="overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-soft">
-        <div className="border-b border-slate-100 bg-gradient-to-b from-white to-slate-50/80 p-5 sm:p-8">
+      <article className="overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white shadow-premium">
+        <div className="border-b border-slate-100 bg-gradient-to-b from-white via-white to-slate-50/90 p-5 sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="mb-3 flex flex-wrap gap-2">
@@ -241,7 +237,7 @@ export function CallingMode({ initialLeads, loadError }: { initialLeads: Lead[];
               <span>{currentLead.regionName || "Region offen"}</span>
             </div>
           </div>
-          <div className="rounded-[1.5rem] bg-slate-950 px-5 py-4 text-white shadow-sm">
+          <div className="rounded-[1.5rem] bg-slate-950 px-5 py-4 text-white shadow-premium">
             <div className="text-xs font-semibold uppercase text-white/45">Telefon</div>
             <div className="mt-1 text-3xl font-semibold tracking-tight">{currentLead.phone || "Fehlt"}</div>
           </div>
@@ -300,7 +296,7 @@ export function CallingMode({ initialLeads, loadError }: { initialLeads: Lead[];
         </div>
           </div>
 
-          <aside className="rounded-[1.5rem] border border-slate-100 bg-slate-50 p-4">
+          <aside className="rounded-[1.5rem] border border-slate-200/70 bg-slate-50/80 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <div className="text-sm font-semibold text-slate-950">Notiz</div>
@@ -369,11 +365,11 @@ export function CallingMode({ initialLeads, loadError }: { initialLeads: Lead[];
   );
 }
 
-function Metric({ label, value }: { label: string; value: string | number }) {
+function Metric({ label, value, active }: { label: string; value: string | number; active?: boolean }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-soft">
-      <div className="text-2xl font-semibold tracking-tight text-slate-950">{value}</div>
-      <div className="mt-1 text-xs font-medium text-slate-500">{label}</div>
+    <div className={`rounded-2xl border px-4 py-3 shadow-sm ${active ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200/70 bg-white/90 text-slate-950"}`}>
+      <div className="text-2xl font-semibold tracking-tight">{value}</div>
+      <div className={`mt-1 text-xs font-medium ${active ? "text-white/50" : "text-slate-500"}`}>{label}</div>
     </div>
   );
 }
@@ -437,16 +433,6 @@ function QuickLink({ href, label, icon }: { href: string; label: string; icon: R
       {icon}
       {label}
     </a>
-  );
-}
-
-function StateCard({ title, text, actions }: { title: string; text: string; actions: React.ReactNode }) {
-  return (
-    <div className="mx-auto max-w-2xl rounded-[2rem] border border-slate-100 bg-white p-10 text-center shadow-soft">
-      <div className="text-2xl font-semibold tracking-tight text-slate-950">{title}</div>
-      <div className="mt-2 text-sm text-slate-500">{text}</div>
-      <div className="mt-6">{actions}</div>
-    </div>
   );
 }
 
